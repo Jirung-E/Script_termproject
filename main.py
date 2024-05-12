@@ -20,7 +20,7 @@ def get_data(key, addr):
 
 def get_ro(key, dong):
     url = 'http://openapi.epost.go.kr/postal/retrieveNewAdressAreaCdService/retrieveNewAdressAreaCdService/getNewAddressListAreaCd'
-    params ={'serviceKey' : key, 'searchSe' : 'dong', 'srchwrd' : dong, 'countPerPage' : '10', 'currentPage' : '1' }
+    params ={'serviceKey' : key, 'searchSe' : 'dong', 'srchwrd' : dong, 'countPerPage' : '10', 'currentPage' : '1'}
 
     response = requests.get(url, params=params)
     return response.content.decode('utf-8')
@@ -31,7 +31,7 @@ if __name__ == "__main__":
         service_key = json.load(f)
 
     addr = get_ro(service_key["decoding"], "홍문동 111-15")
-    data = get_data(service_key["decoding"], addr)
+    data = get_data(service_key["decoding"], "시흥시")
 
     print(addr)
     print(data)

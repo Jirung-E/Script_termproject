@@ -4,7 +4,7 @@ import tkinter
 
 
 def get_location():
-    url = "http://ip-api.com/"
+    url = "http://ip-api.com/json"
     response = requests.get(url)
     return response.json()
 
@@ -20,19 +20,20 @@ def get_data(key, addr):
 
 def get_ro(key, dong):
     url = 'http://openapi.epost.go.kr/postal/retrieveNewAdressAreaCdService/retrieveNewAdressAreaCdService/getNewAddressListAreaCd'
-    params ={'serviceKey' : key, 'searchSe' : 'dong', 'srchwrd' : '주월동 408-1', 'countPerPage' : '10', 'currentPage' : '1' }
+    params ={'serviceKey' : key, 'searchSe' : 'dong', 'srchwrd' : dong, 'countPerPage' : '10', 'currentPage' : '1' }
 
     response = requests.get(url, params=params)
-    return response.content
+    return response.content.decode('utf-8')
 
 
-with open('service_key.json', 'r') as f:
-    service_key = json.load(f)
+if __name__ == "__main__":
+    with open('service_key.json', 'r') as f:
+        service_key = json.load(f)
 
-addr = get_ro(service_key["decoding"], "경기도 용인시 수지구 죽전동")
-# data = get_data(service_key["decoding"], addr)
+    addr = get_ro(service_key["decoding"], "홍문동 111-15")
+    data = get_data(service_key["decoding"], addr)
 
-print(addr)
-# print(data)
+    print(addr)
+    print(data)
 
-print(get_location())
+    print(get_location())

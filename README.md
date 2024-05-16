@@ -30,3 +30,11 @@ https://www.data.go.kr/tcs/dss/selectApiDataDetailView.do?publicDataPk=15100485
 |3주차| | |
 |4주차| | |
 |5주차| | |
+
+
+
+## 피드백
+정보?가 풍부하지 못하다  
+뭔가 더 추가해봐라  
+충전소 위치로 가는 길을 알려주는 기능 등..  
+map에 있다고..  

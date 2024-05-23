@@ -1,0 +1,41 @@
+{
+    "StanReginCd": [
+        {
+            "head": [
+                {
+                    "totalCount": 1
+                },
+                {
+                    "numOfRows": "3",
+                    "pageNo": "1",
+                    "type": "JSON"
+                },
+                {
+                    "RESULT": {
+                        "resultCode": "INFO-0",
+                        "resultMsg": "NOMAL SERVICE"
+                    }
+                }
+            ]
+        },
+        {
+            "row": [
+                {
+                    "region_cd": "4884035024",
+                    "sido_cd": "48",
+                    "sgg_cd": "840",
+                    "umd_cd": "350",
+                    "ri_cd": "24",
+                    "locatjumin_cd": "4884035024",
+                    "locatjijuk_cd": "4884035024",
+                    "locatadd_nm": "경상남도 남해군 남면 선구리",
+                    "locat_order": 4,
+                    "locat_rm": "",
+                    "locathigh_cd": "4884035000",
+                    "locallow_nm": "선구리",
+                    "adpt_de": ""
+                }
+            ]
+        }
+    ]
+}

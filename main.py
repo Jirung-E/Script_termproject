@@ -57,11 +57,15 @@ class SearchWidgets:
                                               image=self.star_empty_img,
                                               font=default_font, 
                                               command=self.add_to_favorites)
+        
+        self.result_listbox = Listbox(master, font=default_font)
+        self.result_listbox.bind("<Double-Button-1>", self.select)
 
         self.widgets: List[Widget] = [
             self.search_input, 
             self.search_location_button, 
             self.add_to_favorites_button,
+            self.result_listbox
         ]
 
     def enable(self, enable):
@@ -83,7 +87,9 @@ class SearchWidgets:
         addr = self.search_input.get()
         data = get_data(service_key["decoding"], addr)
 
-        recent_list.append(addr)
+        if addr in recent_list:
+            recent_list.remove(addr)
+        recent_list.insert(0, addr)
 
         print(data)
 
@@ -110,6 +116,9 @@ class SearchWidgets:
             favorites_list.remove(addr)
             self.add_to_favorites_button.configure(image=self.star_empty_img)
 
+    def select(self, event):
+        print(data)
+
 
 class FavoritesWidgets:
     def __init__(self, window, master):
@@ -130,7 +139,7 @@ class FavoritesWidgets:
             self.listbox.place_forget()
 
     def place(self):
-        self.listbox.place(x=10, y=110, width=390, height=150)
+        self.listbox.place(x=10, y=110, width=390, height=320)
 
     def select(self, event):
         addr = self.listbox.get(self.listbox.curselection())
@@ -160,7 +169,7 @@ class RecentWidgets:
             self.listbox.place_forget()
 
     def place(self):
-        self.listbox.place(x=10, y=110, width=390, height=150)
+        self.listbox.place(x=10, y=110, width=390, height=320)
 
     def select(self, event):
         addr = self.listbox.get(self.listbox.curselection())

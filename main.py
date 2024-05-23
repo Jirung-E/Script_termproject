@@ -45,7 +45,7 @@ class SearchWidgets:
         self.star_empty_img = PhotoImage(file="img/star_empty.png")
         self.star_filled_img = PhotoImage(file="img/star_filled.png")
 
-        self.search_input = PlaceholderText(master, 
+        self.search_input = PlaceholderEntry(master, 
                                             placeholder="주소를 입력하세요", 
                                             font=default_font)
         self.search_input.bind("<KeyPress>", self.update_favorites)
@@ -75,12 +75,12 @@ class SearchWidgets:
                 widget.place_forget()
             
     def place(self):
-        self.search_input.place(x=10, y=110, width=390, height=90)
-        self.search_location_button.place(x=10, y=210, width=330, height=50)
-        self.add_to_favorites_button.place(x=350, y=210, width=50, height=50)
+        self.search_input.place(x=10, y=110, width=390, height=50)
+        self.search_location_button.place(x=10, y=170, width=330, height=50)
+        self.add_to_favorites_button.place(x=350, y=170, width=50, height=50)
 
     def search(self):
-        addr = self.search_input.get('1.0', 'end-1c')
+        addr = self.search_input.get()
         data = get_data(service_key["decoding"], addr)
 
         recent_list.append(addr)
@@ -90,7 +90,7 @@ class SearchWidgets:
         # TODO: 지도에 출력
 
     def update_favorites(self, event):
-        addr = self.search_input.get('1.0', 'end-1c')
+        addr = self.search_input.get()
 
         if addr == "주소를 입력하세요" or addr == "":
             return
@@ -101,7 +101,7 @@ class SearchWidgets:
             self.add_to_favorites_button.configure(image=self.star_empty_img)
 
     def add_to_favorites(self):
-        addr = self.search_input.get('1.0', 'end-1c')
+        addr = self.search_input.get()
 
         if addr not in favorites_list:
             favorites_list.add(addr)
@@ -244,7 +244,7 @@ class GUI:
                                           font=default_font)
         self.disabled_count_label.place(x=320, y=270)
 
-        self.map = Canvas(map_frame, width=660, height=660, bg="white")
+        self.map = Canvas(map_frame, width=900, height=900, bg="white")
         self.map.pack()
 
         self.window.mainloop()
@@ -272,12 +272,24 @@ if __name__ == "__main__":
     with open('service_key.json', 'r') as f:
         service_key = json.load(f)
 
+    with open("recent.txt", "r", encoding="utf-8") as f:
+        recent_list = [s for s in f.read().split("\n") if s != ""]
+
+    with open("favorites.txt", "r", encoding="utf-8") as f:
+        favorites_list = set([s for s in f.read().split("\n") if s != ""])
+
     GUI()
+
+    with open("recent.txt", "w", encoding="utf-8") as f:
+        f.write("\n".join(recent_list))
+    
+    with open("favorites.txt", "w", encoding="utf-8") as f:
+        f.write("\n".join(favorites_list))
 
     # addr = get_ro(service_key["decoding"], "홍문동 111-15")
     # data = get_data(service_key["decoding"], "시흥시")
 
     # print(addr)
-    # print(data)
+    # print(data) 
 
     # print(get_location())

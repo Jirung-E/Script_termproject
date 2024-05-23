@@ -61,8 +61,11 @@ class GUI:
         self.search_input = PlaceholderText(interaction_frame, placeholder="주소를 입력하세요", font=default_font)
         self.search_input.place(x=10, y=110, width=390, height=90)
 
-        self.add_to_favorites_button = Button(interaction_frame, text="즐겨찾기에 추가", font=default_font, command=self.search)
-        self.add_to_favorites_button.place(x=10, y=210, width=390, height=50)
+        self.search_location_button = Button(interaction_frame, text="검색", font=default_font, command=self.search)
+        self.search_location_button.place(x=10, y=210, width=330, height=50)
+
+        self.add_to_favorites_button = Button(interaction_frame, text="즐겨찾기에 추가", font=default_font, command=self.add_to_favorites)  # 아이콘으로 대체합시다
+        self.add_to_favorites_button.place(x=350, y=210, width=50, height=50)
 
         info_frame = Frame(interaction_frame, width=400, height=330)
         info_frame.pack(side=BOTTOM)
@@ -106,6 +109,9 @@ class GUI:
         pass
 
     def search(self):
+        pass
+
+    def add_to_favorites(self):
         pass
 
 

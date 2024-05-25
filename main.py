@@ -12,7 +12,7 @@ button_font = ("맑은 고딕", 24)
 default_font = ("맑은 고딕", 20)
 info_font = ("맑은 고딕", 16)
 
-favorites_list = set()
+favorites_list = []
 recent_list = []
 
 
@@ -100,7 +100,7 @@ class SearchWidgets:
         addr = self.search_input.get()
 
         if addr not in favorites_list:
-            favorites_list.add(addr)
+            favorites_list.append(addr)
             self.add_to_favorites_button.configure(image=self.star_filled_img)
         else:
             favorites_list.remove(addr)
@@ -272,7 +272,7 @@ if __name__ == "__main__":
         recent_list = [s for s in f.read().split("\n") if s != ""]
 
     with open("favorites.txt", "r", encoding="utf-8") as f:
-        favorites_list = set([s for s in f.read().split("\n") if s != ""])
+        favorites_list = [s for s in f.read().split("\n") if s != ""]
 
     GUI()
 

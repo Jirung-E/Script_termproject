@@ -1,5 +1,10 @@
-import xmltodict
 import requests
+import io
+from PIL import Image, ImageTk
+from googlemaps import Client
+from typing import List
+
+from charger_config import *
 
 
 def get_location():
@@ -13,30 +18,37 @@ def get_region_code(key, addr: str):
     url += "&type=json"
     url += "&locatadd_nm=" + addr
 
-    return requests.get(url).json()["StanReginCd"][1]["row"][0]["region_cd"][:5]
+    data = requests.get(url).json()
+
+    try:
+        code = data["StanReginCd"][1]["row"][0]["region_cd"][:5]
+    except:
+        print(data)
+        return None
+
+    return code
 
 def get_chargers_in_region(key, region_code):
     url = "http://apis.data.go.kr/B552584/EvCharger/getChargerInfo"
     queryParams = {
         "serviceKey": key,
-        "numOfRows": 10,
+        "numOfRows": 100,
         "pageNo": 1,
         "zscode": region_code,
+        "dataType": "JSON",
     }
 
-    response = requests.get(url, params=queryParams)
-    data = xmltodict.parse(response.content)["response"]["body"]["items"]["item"]
+    data = requests.get(url, params=queryParams).json()["items"]["item"]
 
     chargers = []
     for item in data:
-        charger = {
-            "name": item["statNm"],
-            "address": item["addr"],
-            "lat": item["lat"],  # 위도
-            "lng": item["lng"],  # 경도
-            "doctors": item["chgerType"],
-        }
-        chargers.append(charger)
+        chargers.append(Charger(
+            item["statNm"],
+            item["addr"],
+            GeoCoord(item["lat"], item["lng"]),
+            item["stat"],
+            item["chgerType"],
+        ))
 
     return chargers
 
@@ -55,3 +67,25 @@ def get_ro(key, dong):
 
     response = requests.get(url, params=params)
     return response.content.decode('utf-8')
+
+def get_googlemap(addr, size: str, markers: List[GeoCoord]=[], zoom=13):
+    Google_API_Key = 'AIzaSyAEoWFuqL21eB18xa6aVcUnANEUz4GdtTk'
+    gmaps = Client(key=Google_API_Key)
+
+    center = gmaps.geocode(addr)[0]['geometry']['location']
+    map_url = "https://maps.googleapis.com/maps/api/staticmap"
+    map_url += "?key=" + Google_API_Key
+    map_url += f"&center={center['lat']},{center['lng']}"
+    map_url += "&zoom=" + str(zoom)
+    map_url += "&size=1440x1440"
+    map_url += "&maptype=roadmap"
+
+    for marker in markers:
+        if marker.lat and marker.lng:
+            map_url += f"&markers=color:red%7C{marker.lat},{marker.lng}"
+
+    response = requests.get(map_url)
+    image = Image.open(io.BytesIO(response.content)).resize(map(int, size.split('x')))
+    photo = ImageTk.PhotoImage(image)
+
+    return photo

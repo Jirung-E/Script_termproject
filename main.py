@@ -4,11 +4,13 @@ from tkinter.ttk import Progressbar
 from typing import List
 
 from apis import *
+from charger_config import *
 from placeholder import *
 
 
 button_font = ("맑은 고딕", 24)
 default_font = ("맑은 고딕", 20)
+info_font = ("맑은 고딕", 16)
 
 favorites_list = set()
 recent_list = []
@@ -34,7 +36,7 @@ class SearchWidgets:
                                               font=default_font, 
                                               command=self.add_to_favorites)
         
-        self.result_listbox = Listbox(master.interaction_frame, font=default_font)
+        self.result_listbox = Listbox(master.interaction_frame, font=info_font)
         self.result_listbox.bind("<Double-Button-1>", self.select)
 
         self.widgets: List[Widget] = [
@@ -62,20 +64,22 @@ class SearchWidgets:
         self.result_listbox.place(x=10, y=230, width=390, height=200)
 
     def search(self, addr):
-        code = get_region_code(service_key["encoding"], addr)
-        self.data = get_chargers_in_region(service_key["decoding"], code)
-        # self.data = get_data(service_key["decoding"], addr)['data']
-
-        if addr in recent_list:
-            recent_list.remove(addr)
-        recent_list.insert(0, addr)
-
         self.result_listbox.delete(0, END)
-        self.result_listbox.insert(END, *self.data)
+        
+        code = get_region_code(service_key["encoding"], addr)
+        if code is not None:
+            self.chargers: List[Charger] = get_chargers_in_region(service_key["decoding"], code)
+            # self.data = get_data(service_key["decoding"], addr)['data']
 
-        print(self.data)
+            if addr in recent_list:
+                recent_list.remove(addr)
+            recent_list.insert(0, addr)
 
-        # TODO: 지도에 출력
+            for charger in self.chargers:
+                self.result_listbox.insert(END, charger.name)
+        
+        charger_coords = [charger.coord for charger in self.chargers]
+        self.master.update_map(addr, charger_coords)
 
     def update_favorites(self, event):
         addr = self.search_input.get()
@@ -103,8 +107,8 @@ class SearchWidgets:
             self.add_to_favorites_button.configure(image=self.star_empty_img)
 
     def select(self, event):
-        # TODO: 지도에 출력
-        pass
+        charger_coords = [charger.coord for charger in self.chargers]
+        self.master.update_map(self.chargers[self.result_listbox.curselection()[0]].addr, charger_coords)
 
 
 class FavoritesWidgets:
@@ -165,8 +169,8 @@ class GUI:
         self.interaction_frame = Frame(self.window)
         self.interaction_frame.pack(side=LEFT, fill=BOTH, expand=True)
 
-        map_frame = Frame(self.window, padx=10, pady=10)
-        map_frame.pack(side=LEFT, fill=BOTH, expand=True)
+        self.map_frame = Frame(self.window, padx=10, pady=10)
+        self.map_frame.pack(side=LEFT, fill=BOTH, expand=True)
 
         button_frame = Frame(self.interaction_frame, 
                              width=400, height=100, 
@@ -230,10 +234,16 @@ class GUI:
                                           font=default_font)
         self.disabled_count_label.place(x=320, y=270)
 
-        self.map = Canvas(map_frame, width=900, height=900, bg="white")
+        self.map_size = "900x900"
+        self.map_img = get_googlemap("서울특별시 중구 을지로2가", self.map_size)
+        self.map = Label(self.map_frame, image=self.map_img)
         self.map.pack()
 
         self.window.mainloop()
+
+    def update_map(self, addr, markers=[], zoom=13):
+        self.map_img = get_googlemap(addr, self.map_size, markers, zoom)
+        self.map.configure(image=self.map_img)
 
     def switch_to_search_mode(self):
         self.search_widgets.enable(True)

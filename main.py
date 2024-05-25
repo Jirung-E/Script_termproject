@@ -235,14 +235,14 @@ class GUI:
         self.disabled_count_label.place(x=320, y=270)
 
         self.map_size = "900x900"
-        self.map_img = get_googlemap("서울특별시 중구 을지로2가", self.map_size)
+        self.map_img = get_googlemap(service_key["google"], "서울특별시 중구 을지로2가", self.map_size)
         self.map = Label(self.map_frame, image=self.map_img)
         self.map.pack()
 
         self.window.mainloop()
 
     def update_map(self, addr, markers=[], zoom=13):
-        self.map_img = get_googlemap(addr, self.map_size, markers, zoom)
+        self.map_img = get_googlemap(service_key["google"], addr, self.map_size, markers, zoom)
         self.map.configure(image=self.map_img)
 
     def switch_to_search_mode(self):

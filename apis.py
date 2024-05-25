@@ -68,13 +68,12 @@ def get_ro(key, dong):
     response = requests.get(url, params=params)
     return response.content.decode('utf-8')
 
-def get_googlemap(addr, size: str, markers: List[GeoCoord]=[], zoom=13):
-    Google_API_Key = 'AIzaSyAEoWFuqL21eB18xa6aVcUnANEUz4GdtTk'
-    gmaps = Client(key=Google_API_Key)
-
+def get_googlemap(key, addr, size: str, markers: List[GeoCoord]=[], zoom=13):
+    gmaps = Client(key=key)
     center = gmaps.geocode(addr)[0]['geometry']['location']
+
     map_url = "https://maps.googleapis.com/maps/api/staticmap"
-    map_url += "?key=" + Google_API_Key
+    map_url += "?key=" + key
     map_url += f"&center={center['lat']},{center['lng']}"
     map_url += "&zoom=" + str(zoom)
     map_url += "&size=1440x1440"

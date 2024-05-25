@@ -1,79 +1,10 @@
 import json
-import xmltodict
-import requests
 from tkinter import *
 from tkinter.ttk import Progressbar
 from typing import List
 
+from apis import *
 from placeholder import *
-
-
-def get_location():
-    url = "http://ip-api.com/json"
-    response = requests.get(url)
-    return response.json()
-
-def get_region_code(key, addr: str):
-    url = "http://apis.data.go.kr/1741000/StanReginCd/getStanReginCdList"
-    url += "?serviceKey=" + key
-    url += "&type=json"
-    url += "&locatadd_nm=" + addr
-
-    return requests.get(url).json()["StanReginCd"][1]["row"][0]["region_cd"][:5]
- 
-    # queryParams = {
-    #     "serviceKey": key,
-    #     "type": "json",
-    #     "locatadd_nm": addr,
-    # }
-
-    # req = requests.get(url, params=queryParams)
-
-    # print(req.url)
-    # print(url)
-
-    # return requests.get(url, params=queryParams).json()
-
-def get_chargers_in_region(key, region_code):
-    url = "http://apis.data.go.kr/B552584/EvCharger/getChargerInfo"
-    queryParams = {
-        "serviceKey": key,
-        "numOfRows": 10,
-        "pageNo": 1,
-        "zscode": region_code,
-    }
-
-    response = requests.get(url, params=queryParams)
-    data = xmltodict.parse(response.content)["response"]["body"]["items"]["item"]
-
-    chargers = []
-    for item in data:
-        charger = {
-            "name": item["statNm"],
-            "address": item["addr"],
-            "lat": item["lat"],  # 위도
-            "lng": item["lng"],  # 경도
-            "doctors": item["chgerType"],
-        }
-        chargers.append(charger)
-
-    return chargers
-
-def get_data(key, addr):    
-    url = "https://api.odcloud.kr/api/EvInfoServiceV2/v1/getEvSearchList"
-    queryParams = {
-        "serviceKey": key,
-        "cond[addr::LIKE]": addr,
-    }
-
-    return requests.get(url, params=queryParams).json()
-
-def get_ro(key, dong):
-    url = 'http://openapi.epost.go.kr/postal/retrieveNewAdressAreaCdService/retrieveNewAdressAreaCdService/getNewAddressListAreaCd'
-    params = {'serviceKey' : key, 'searchSe' : 'dong', 'srchwrd' : dong, 'countPerPage' : '10', 'currentPage' : '1'}
-
-    response = requests.get(url, params=params)
-    return response.content.decode('utf-8')
 
 
 button_font = ("맑은 고딕", 24)
@@ -131,7 +62,9 @@ class SearchWidgets:
         self.result_listbox.place(x=10, y=230, width=390, height=200)
 
     def search(self, addr):
-        self.data = get_data(service_key["decoding"], addr)['data']
+        code = get_region_code(service_key["encoding"], addr)
+        self.data = get_chargers_in_region(service_key["decoding"], code)
+        # self.data = get_data(service_key["decoding"], addr)['data']
 
         if addr in recent_list:
             recent_list.remove(addr)
@@ -325,10 +258,6 @@ if __name__ == "__main__":
     with open('service_key.json', 'r') as f:
         service_key = json.load(f)
 
-    rc = get_region_code(service_key["encoding"], "서울특별시_강남구_역삼동")
-    print(rc)
-    print(get_chargers_in_region(service_key["decoding"], rc))
-
     with open("recent.txt", "r", encoding="utf-8") as f:
         recent_list = [s for s in f.read().split("\n") if s != ""]
 
@@ -342,11 +271,3 @@ if __name__ == "__main__":
     
     with open("favorites.txt", "w", encoding="utf-8") as f:
         f.write("\n".join(favorites_list))
-
-    # addr = get_ro(service_key["decoding"], "홍문동 111-15")
-    # data = get_data(service_key["decoding"], "시흥시")
-
-    # print(addr)
-    # print(data) 
-
-    # print(get_location())

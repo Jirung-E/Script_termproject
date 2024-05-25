@@ -108,7 +108,28 @@ class SearchWidgets:
 
     def select(self, event):
         charger_coords = [charger.coord for charger in self.chargers]
-        self.master.update_map(self.chargers[self.result_listbox.curselection()[0]].addr, charger_coords)
+        self.master.update_map(
+            self.chargers[self.result_listbox.curselection()[0]].addr, 
+            charger_coords
+        )
+        
+        self.master.info_widgets.details_listbox.delete(0, END)
+        self.master.info_widgets.details_listbox.insert(
+            END, self.chargers[self.result_listbox.curselection()[0]].addr)
+        self.master.info_widgets.details_listbox.insert(
+            END, self.chargers[self.result_listbox.curselection()[0]].getState())
+        self.master.info_widgets.details_listbox.insert(
+            END, self.chargers[self.result_listbox.curselection()[0]].getType())
+        self.master.info_widgets.details_listbox.insert(
+            END, "주차: " + self.chargers[self.result_listbox.curselection()[0]].getParking())
+        self.master.info_widgets.details_listbox.insert(
+            END, self.chargers[self.result_listbox.curselection()[0]].getLimit())
+        self.master.info_widgets.details_listbox.insert(
+            END, self.chargers[self.result_listbox.curselection()[0]].note)
+        self.master.info_widgets.details_listbox.insert(
+            END, "출력: " + self.chargers[self.result_listbox.curselection()[0]].getOutput())
+        self.master.info_widgets.details_listbox.insert(
+            END, "충전방식: " + self.chargers[self.result_listbox.curselection()[0]].method)
 
 
 class FavoritesWidgets:
@@ -161,6 +182,105 @@ class RecentWidgets:
         self.master.search_widgets.search(self.listbox.get(self.listbox.curselection()))
 
 
+class InfoWidgets:
+    def __init__(self, master):
+        self.master = master
+
+        self.details_listbox = Listbox(master.info_frame, font=info_font)
+
+        self.available_label =  Label(
+                                    master.info_frame, 
+                                    text="사용가능", 
+                                    font=default_font
+                                )
+        self.available_progress = Progressbar(
+                                    master.info_frame, 
+                                    orient=HORIZONTAL, 
+                                    length=180, 
+                                    mode='determinate', 
+                                    maximum=100, 
+                                    value=10
+                                )
+        self.available_count_label = Label(
+                                    master.info_frame, 
+                                    text="123개", 
+                                    font=default_font
+                                )
+
+        self.occupied_label =   Label(
+                                    master.info_frame, 
+                                    text="사용중", 
+                                    font=default_font
+                                )
+        self.occupied_progress = Progressbar(
+                                    master.info_frame, 
+                                    orient=HORIZONTAL, 
+                                    length=180, 
+                                    mode='determinate', 
+                                    maximum=100, 
+                                    value=10
+                                )
+        self.occupied_count_label = Label(
+                                    master.info_frame, 
+                                    text="70개", 
+                                    font=default_font
+                                )
+
+        self.disabled_label =   Label(
+                                    master.info_frame, 
+                                    text="사용불가", 
+                                    font=default_font
+                                )
+        self.disabled_progress = Progressbar(
+                                    master.info_frame, 
+                                    orient=HORIZONTAL, 
+                                    length=180, 
+                                    mode='determinate', 
+                                    maximum=100, 
+                                    value=10
+                                )
+        self.disabled_count_label = Label(
+                                    master.info_frame, 
+                                    text="2개", 
+                                    font=default_font
+                                )
+
+        self.widgets: List[Widget] = [
+            self.details_listbox,
+            self.available_label, 
+            self.available_progress, 
+            self.available_count_label,
+            self.occupied_label, 
+            self.occupied_progress, 
+            self.occupied_count_label,
+            self.disabled_label, 
+            self.disabled_progress, 
+            self.disabled_count_label,
+        ]
+
+    def enable(self, enable):
+        if enable:
+            for widget in self.widgets:
+                widget.configure(state=NORMAL)
+                self.place()
+        else:
+            for widget in self.widgets:
+                widget.configure(state=DISABLED)
+                widget.place_forget()
+
+    def place(self):
+        self.details_listbox.place(x=10, y=10, width=390, height=300)
+        self.available_label.place(x=10, y=320)
+        self.available_progress.place(x=130, y=325, height=40)
+        self.available_count_label.place(x=320, y=320)
+        self.occupied_label.place(x=10, y=370)
+        self.occupied_progress.place(x=130, y=375, height=40)
+        self.occupied_count_label.place(x=320, y=370)
+        self.disabled_label.place(x=10, y=420)
+        self.disabled_progress.place(x=130, y=425, height=40)
+        self.disabled_count_label.place(x=320, y=420)
+
+
 class GUI:
     def __init__(self):
         self.window = Tk()
@@ -198,45 +318,16 @@ class GUI:
         self.favorites_widgets = FavoritesWidgets(self)
         self.recent_widgets = RecentWidgets(self)
 
-        info_frame = Frame(self.interaction_frame, width=400, height=330)
-        info_frame.pack(side=BOTTOM)
+        self.info_frame = Frame(self.interaction_frame, width=400, height=480)
+        self.info_frame.pack(side=BOTTOM)
 
-        self.available_label = Label(info_frame, text="사용가능", 
-                                     font=default_font)
-        self.available_label.place(x=10, y=170)
-        self.progress = Progressbar(info_frame, orient=HORIZONTAL, 
-                                    length=180, mode='determinate', 
-                                    maximum=100, value=10)
-        self.progress.place(x=130, y=175, height=40)
-        self.available_count_label = Label(info_frame, text="123개", 
-                                           font=default_font)
-        self.available_count_label.place(x=320, y=170)
-
-        self.occupied_label = Label(info_frame, text="사용중", 
-                                    font=default_font)
-        self.occupied_label.place(x=10, y=220)
-        self.progress = Progressbar(info_frame, orient=HORIZONTAL, 
-                                    length=180, mode='determinate', 
-                                    maximum=100, value=10)
-        self.progress.place(x=130, y=225, height=40)
-        self.occupied_count_label = Label(info_frame, text="70개", 
-                                          font=default_font)
-        self.occupied_count_label.place(x=320, y=220)
-
-        self.disabled_label = Label(info_frame, text="사용불가", 
-                                    font=default_font)
-        self.disabled_label.place(x=10, y=270)
-        self.progress = Progressbar(info_frame, orient=HORIZONTAL, 
-                                    length=180, mode='determinate', 
-                                    maximum=100, value=10)
-        self.progress.place(x=130, y=275, height=40)
-        self.disabled_count_label = Label(info_frame, text="2개", 
-                                          font=default_font)
-        self.disabled_count_label.place(x=320, y=270)
+        self.info_widgets = InfoWidgets(self)
+        self.info_widgets.place()
 
         self.map_size = "900x900"
         self.map_img = get_googlemap(service_key["google"], "서울특별시 중구 을지로2가", self.map_size)
         self.map = Label(self.map_frame, image=self.map_img)
+        # self.map = Canvas(self.map_frame, width=900, height=900, bg="white")        # 테스트시 api호출 막기 위해 캔버스로 대체
         self.map.pack()
 
         self.window.mainloop()

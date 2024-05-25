@@ -4,12 +4,18 @@ class GeoCoord:
         self.lng = lng
 
 class Charger:
-    def __init__(self, name, addr, coord, state, type):
+    def __init__(self, name, addr, coord, state, type, parking, limit, limit_detail, note, output, method):
         self.name: str = name
         self.addr: str = addr
         self.coord: GeoCoord = coord
         self.state: str = state
         self.type: str = type
+        self.parking: str = parking
+        self.limit: str = limit
+        self.limit_detail: str = limit_detail
+        self.note: str = note
+        self.output: str = output
+        self.method: str = method
 
     def getState(self):
         if self.state == '0':
@@ -48,3 +54,22 @@ class Charger:
             return "H2"
         else:
             return '기타'
+        
+    def getParking(self):
+        if self.parking == 'Y':
+            return '무료'
+        elif self.parking == 'N':
+            return '유료'
+        else:
+            return '미확인'
+        
+    def getLimit(self):
+        if self.limit == 'Y':
+            return '제한: ' + self.limit_detail
+        elif self.limit == 'N':
+            return '무제한'
+        else:
+            return '미확인' + self.limit_detail
+        
+    def getOutput(self):
+        return self.output + 'kW'

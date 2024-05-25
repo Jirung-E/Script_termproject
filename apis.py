@@ -48,6 +48,12 @@ def get_chargers_in_region(key, region_code):
             GeoCoord(item["lat"], item["lng"]),
             item["stat"],
             item["chgerType"],
+            item["parkingFree"],
+            item["limitYn"],
+            item["limitDetail"],
+            item["note"],
+            item["output"],
+            item["method"],
         ))
 
     return chargers

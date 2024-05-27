@@ -1,6 +1,6 @@
 import json
 from tkinter import *
-from tkinter.ttk import Progressbar
+from tkinter.ttk import Progressbar, Combobox
 from typing import List
 
 from apis import *
@@ -11,9 +11,12 @@ from placeholder import *
 button_font = ("맑은 고딕", 24)
 default_font = ("맑은 고딕", 20)
 info_font = ("맑은 고딕", 16)
+combobox_font = ("맑은 고딕", 18)
 
 favorites_list = []
 recent_list = []
+
+region_code = {}
 
 
 class SearchWidgets:
@@ -22,26 +25,42 @@ class SearchWidgets:
 
         self.star_empty_img = PhotoImage(file="img/star_empty.png")
         self.star_filled_img = PhotoImage(file="img/star_filled.png")
+        
+        self.master.window.option_add('*TCombobox*Listbox.font', combobox_font)
 
+        self.dosi_combobox = Combobox(master.interaction_frame, font=combobox_font)
+        self.dosi_combobox['values'] = list(region_code.keys())
+        self.dosi_combobox.bind("<<ComboboxSelected>>", self.select_dosi)
+
+        self.sigungu_combobox = Combobox(master.interaction_frame, font=combobox_font)
+        self.sigungu_combobox['values'] = None
+        self.sigungu_combobox.bind("<<ComboboxSelected>>", self.select_sigungu)
+        
         self.search_input = PlaceholderEntry(master.interaction_frame, 
-                                            placeholder="주소를 입력하세요", 
-                                            font=default_font)
+                                             placeholder="상세주소", 
+                                             font=default_font)
         self.search_input.bind("<KeyPress>", self.press_enter)
         self.search_input.bind("<KeyRelease>", self.update_favorites)
-        self.search_location_button = Button(master.interaction_frame, text="검색", 
-                                             font=default_font, 
-                                             command=lambda: self.search(self.search_input.get()))
+        
+        self.search_icon = PhotoImage(file="img/search_icon.png")
+        self.search_button = Button(master.interaction_frame, 
+                                    image=self.search_icon,
+                                    command=lambda: self.search(self.make_address()))
+        
         self.add_to_favorites_button = Button(master.interaction_frame, 
                                               image=self.star_empty_img,
                                               font=default_font, 
                                               command=self.add_to_favorites)
+
         
         self.result_listbox = Listbox(master.interaction_frame, font=info_font)
-        self.result_listbox.bind("<Double-Button-1>", self.select)
+        self.result_listbox.bind("<Double-Button-1>", self.select_charger)
 
         self.widgets: List[Widget] = [
+            self.dosi_combobox,
+            self.sigungu_combobox,
             self.search_input, 
-            self.search_location_button, 
+            self.search_button, 
             self.add_to_favorites_button,
             self.result_listbox
         ]
@@ -58,13 +77,37 @@ class SearchWidgets:
             self.search_input.delete(0, END)
             
     def place(self):
-        self.search_input.place(x=10, y=110, width=390, height=50)
-        self.search_location_button.place(x=10, y=170, width=330, height=50)
+        self.dosi_combobox.place(x=10, y=110, width=190, height=50)
+        self.sigungu_combobox.place(x=210, y=110, width=190, height=50)
+        self.search_input.place(x=10, y=170, width=270, height=50)
+        self.search_button.place(x=290, y=170, width=50, height=50)
         self.add_to_favorites_button.place(x=350, y=170, width=50, height=50)
         self.result_listbox.place(x=10, y=230, width=390, height=200)
+        self.dosi_combobox['state'] = 'readonly'
+        self.sigungu_combobox['state'] = 'readonly'
+
+    def select_dosi(self, event):
+        dosi = self.dosi_combobox.get()
+        self.sigungu_combobox['values'] = list(region_code[dosi]["sigungu"].keys())
+
+    def select_sigungu(self, event):
+        dosi = self.dosi_combobox.get()
+        sigungu = self.sigungu_combobox.get()
+        self.region_code = region_code[dosi]["sigungu"][sigungu]
+
+    def make_address(self):
+        s = ""
+        s += self.dosi_combobox.get() + " "
+        s += self.sigungu_combobox.get() + " "
+        s += self.search_input.get()
+        return s
 
     def search(self, addr: str):
         self.result_listbox.delete(0, END)
+
+        addr = addr.strip()
+        if addr == "":
+            return
         
         code = None
         address = addr.split(" ")
@@ -87,9 +130,9 @@ class SearchWidgets:
         self.master.update_map(addr, charger_coords)
 
     def update_favorites(self, event):
-        addr = self.search_input.get()
+        addr = self.make_address().strip()
 
-        if addr == "주소를 입력하세요" or addr == "":
+        if addr == "상세주소" or addr == "":
             return
         
         if addr in favorites_list:
@@ -102,7 +145,7 @@ class SearchWidgets:
             self.search(self.search_input.get())
 
     def add_to_favorites(self):
-        addr = self.search_input.get()
+        addr = self.make_address().strip()
 
         if addr not in favorites_list:
             favorites_list.append(addr)
@@ -111,7 +154,7 @@ class SearchWidgets:
             favorites_list.remove(addr)
             self.add_to_favorites_button.configure(image=self.star_empty_img)
 
-    def select(self, event):
+    def select_charger(self, event):
         charger_coords = [charger.coord for charger in self.chargers]
         self.master.update_map(
             self.chargers[self.result_listbox.curselection()[0]].addr, 
@@ -159,6 +202,9 @@ class FavoritesWidgets:
 
     def select(self, event):
         self.master.switch_to_search_mode()
+        self.master.search_widgets.search_input.delete(0, END)
+        self.master.search_widgets.search_input.foc_in(None)
+        self.master.search_widgets.search_input.insert(0, self.listbox.get(self.listbox.curselection()))
         self.master.search_widgets.search(self.listbox.get(self.listbox.curselection()))
 
 
@@ -184,6 +230,9 @@ class RecentWidgets:
 
     def select(self, event):
         self.master.switch_to_search_mode()
+        self.master.search_widgets.search_input.delete(0, END)
+        self.master.search_widgets.search_input.foc_in(None)
+        self.master.search_widgets.search_input.insert(0, self.listbox.get(self.listbox.curselection()))
         self.master.search_widgets.search(self.listbox.get(self.listbox.curselection()))
 
 
@@ -369,6 +418,9 @@ if __name__ == "__main__":
 
     with open("favorites.txt", "r", encoding="utf-8") as f:
         favorites_list = [s for s in f.read().split("\n") if s != ""]
+
+    with open("region_code.json", "r", encoding="utf-8") as f:
+        region_code = json.load(f)
 
     GUI()
 

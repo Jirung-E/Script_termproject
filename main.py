@@ -63,10 +63,15 @@ class SearchWidgets:
         self.add_to_favorites_button.place(x=350, y=170, width=50, height=50)
         self.result_listbox.place(x=10, y=230, width=390, height=200)
 
-    def search(self, addr):
+    def search(self, addr: str):
         self.result_listbox.delete(0, END)
         
-        code = get_region_code(service_key["encoding"], addr)
+        code = None
+        address = addr.split(" ")
+        while code is None and len(address) > 0:
+            code = get_region_code(service_key["encoding"], str(' '.join(address)))
+            address.pop()
+
         if code is not None:
             self.chargers: List[Charger] = get_chargers_in_region(service_key["decoding"], code)
             # self.data = get_data(service_key["decoding"], addr)['data']

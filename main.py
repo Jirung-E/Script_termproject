@@ -128,6 +128,7 @@ class SearchWidgets:
         
         charger_coords = [charger.coord for charger in self.chargers]
         self.master.update_map(addr, charger_coords)
+        self.master.info_widgets.set_graph(self.chargers)
 
     def update_favorites(self, event):
         addr = self.make_address().strip()
@@ -333,6 +334,27 @@ class InfoWidgets:
         self.disabled_label.place(x=10, y=420)
         self.disabled_progress.place(x=130, y=425, height=40)
         self.disabled_count_label.place(x=320, y=420)
+
+    def set_graph(self, chargers: List[Charger]):
+        available = 0
+        occupied = 0
+        disabled = 0
+
+        for charger in chargers:
+            if charger.getState() == "사용가능":
+                available += 1
+            elif charger.getState() == "사용중":
+                occupied += 1
+            else:
+                disabled += 1
+
+        total = available + occupied + disabled
+        self.available_progress.configure(value=available / total * 100)
+        self.available_count_label.configure(text=f"{available}개")
+        self.occupied_progress.configure(value=occupied / total * 100)
+        self.occupied_count_label.configure(text=f"{occupied}개")
+        self.disabled_progress.configure(value=disabled / total * 100)
+        self.disabled_count_label.configure(text=f"{disabled}개")
 
 
 class GUI:

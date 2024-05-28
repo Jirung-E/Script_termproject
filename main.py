@@ -90,11 +90,13 @@ class SearchWidgets:
         dosi = self.dosi_combobox.get()
         self.sigungu_combobox['values'] = list(region_code[dosi]["sigungu"].keys())
         self.sigungu_combobox.current(0)
+        self.update_favorites(None)
 
     def select_sigungu(self, event):
         dosi = self.dosi_combobox.get()
         sigungu = self.sigungu_combobox.get()
         self.region_code = region_code[dosi]["sigungu"][sigungu]
+        self.update_favorites(None)
 
     def make_address(self):
         s = ""
@@ -144,7 +146,7 @@ class SearchWidgets:
 
     def press_enter(self, event):
         if event.keysym == "Return":
-            self.search(self.search_input.get())
+            self.search(self.make_address())
 
     def add_to_favorites(self):
         addr = self.make_address().strip()
@@ -256,12 +258,12 @@ class InfoWidgets:
                                     orient=HORIZONTAL, 
                                     length=180, 
                                     mode='determinate', 
-                                    maximum=100, 
-                                    value=10
+                                    maximum=0, 
+                                    value=0
                                 )
         self.available_count_label = Label(
                                     master.info_frame, 
-                                    text="123개", 
+                                    text="0개", 
                                     font=default_font
                                 )
 
@@ -275,12 +277,12 @@ class InfoWidgets:
                                     orient=HORIZONTAL, 
                                     length=180, 
                                     mode='determinate', 
-                                    maximum=100, 
-                                    value=10
+                                    maximum=0, 
+                                    value=0
                                 )
         self.occupied_count_label = Label(
                                     master.info_frame, 
-                                    text="70개", 
+                                    text="0개", 
                                     font=default_font
                                 )
 
@@ -294,12 +296,12 @@ class InfoWidgets:
                                     orient=HORIZONTAL, 
                                     length=180, 
                                     mode='determinate', 
-                                    maximum=100, 
-                                    value=10
+                                    maximum=0, 
+                                    value=0
                                 )
         self.disabled_count_label = Label(
                                     master.info_frame, 
-                                    text="2개", 
+                                    text="0개", 
                                     font=default_font
                                 )
 
@@ -352,12 +354,56 @@ class InfoWidgets:
                 disabled += 1
 
         total = available + occupied + disabled
-        self.available_progress.configure(value=available / total * 100)
+        self.available_progress.configure(value=available, maximum=total)
         self.available_count_label.configure(text=f"{available}개")
-        self.occupied_progress.configure(value=occupied / total * 100)
+        self.occupied_progress.configure(value=occupied, maximum=total)
         self.occupied_count_label.configure(text=f"{occupied}개")
-        self.disabled_progress.configure(value=disabled / total * 100)
+        self.disabled_progress.configure(value=disabled, maximum=total)
         self.disabled_count_label.configure(text=f"{disabled}개")
+
+
+class MapWidgets:
+    def __init__(self, master):
+        self.master = master
+
+        self.zoom = 13
+        self.size = "900x900"
+        self.address = "서울특별시 중구 을지로2가"
+        self.markers = []
+
+        # self.map = Canvas(self.master.map_frame, width=900, height=900, bg="white")        # 테스트시 api호출 막기 위해 캔버스로 대체
+        
+        self.map_img = get_googlemap(service_key["google"], self.address, self.size)
+        self.map = Label(self.master.map_frame, image=self.map_img)
+
+        self.zoom_in_button = Button(self.master.map_frame, text="+", font=("Consolas", 40), command=self.zoom_in)
+        self.zoom_out_button = Button(self.master.map_frame, text="-", font=("Consolas", 48), command=self.zoom_out)
+
+    def update_map(self, addr, markers=[]):
+        self.address = addr
+        self.markers = markers
+        self.show_map()
+
+    def show_map(self):
+        self.map_img = get_googlemap(service_key["google"], self.address, self.size, self.markers, self.zoom)
+        self.map.configure(image=self.map_img)
+
+    def place(self):
+        self.map.pack()
+        self.zoom_in_button.place(x=900-60, y=900-60, width=50, height=50)
+        self.zoom_out_button.place(x=900-60-60, y=900-60, width=50, height=50)
+
+    def zoom_in(self):
+        self.zoom += 1
+        if self.zoom > 20:
+            self.zoom = 20
+        self.show_map()
+
+    def zoom_out(self):
+        self.zoom -= 1
+        if self.zoom < 5:
+            self.zoom = 5
+        self.show_map()
 
 
 class GUI:
@@ -368,9 +414,7 @@ class GUI:
         self.interaction_frame = Frame(self.window)
         self.interaction_frame.pack(side=LEFT, fill=BOTH, expand=True)
 
-        self.map_frame = Frame(self.window, padx=10, pady=10)
-        self.map_frame.pack(side=LEFT, fill=BOTH, expand=True)
-
+        # -- INTERACTION WIDGETS --
         button_frame = Frame(self.interaction_frame, 
                              width=400, height=100, 
                              padx=10, pady=10)
@@ -392,6 +436,7 @@ class GUI:
         self.recent_button.place(x=200, width=90, height=90)
         self.share_button.place(x=300, width=90, height=90)
 
+        # -- INTERACTION WIDGETS --
         self.search_widgets = SearchWidgets(self)
         self.search_widgets.place()
         self.favorites_widgets = FavoritesWidgets(self)
@@ -402,18 +447,18 @@ class GUI:
 
         self.info_widgets = InfoWidgets(self)
         self.info_widgets.place()
-
-        self.map_size = "900x900"
-        self.map_img = get_googlemap(service_key["google"], "서울특별시 중구 을지로2가", self.map_size)
-        self.map = Label(self.map_frame, image=self.map_img)
-        # self.map = Canvas(self.map_frame, width=900, height=900, bg="white")        # 테스트시 api호출 막기 위해 캔버스로 대체
-        self.map.pack()
+        
+        # -- MAP WIDGETS --
+        self.map_frame = Frame(self.window, padx=10, pady=10)
+        self.map_frame.pack(side=LEFT, fill=BOTH, expand=True)
+        
+        self.map_widgets = MapWidgets(self)
+        self.map_widgets.place()
 
         self.window.mainloop()
 
-    def update_map(self, addr, markers=[], zoom=13):
-        self.map_img = get_googlemap(service_key["google"], addr, self.map_size, markers, zoom)
-        self.map.configure(image=self.map_img)
+    def update_map(self, addr, markers=[]):
+        self.map_widgets.update_map(addr, markers)
 
     def switch_to_search_mode(self):
         self.search_widgets.enable(True)

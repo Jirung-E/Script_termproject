@@ -28,12 +28,12 @@ def get_region_code(key, addr: str):
 
     return code
 
-def get_chargers_in_region(key, region_code):
+def get_chargers_in_region(key, region_code, page=1):
     url = "http://apis.data.go.kr/B552584/EvCharger/getChargerInfo"
     queryParams = {
         "serviceKey": key,
-        "numOfRows": 100,
-        "pageNo": 1,
+        "numOfRows": 500,
+        "pageNo": page,
         "zscode": region_code,
         "dataType": "JSON",
     }
@@ -77,6 +77,7 @@ def get_ro(key, dong):
 def get_googlemap(key, addr, size: str, markers: List[GeoCoord]=[], zoom=13):
     gmaps = Client(key=key)
     center = gmaps.geocode(addr)[0]['geometry']['location']
+    print(center)
 
     map_url = "https://maps.googleapis.com/maps/api/staticmap"
     map_url += "?key=" + key
@@ -84,13 +85,23 @@ def get_googlemap(key, addr, size: str, markers: List[GeoCoord]=[], zoom=13):
     map_url += "&zoom=" + str(zoom)
     map_url += "&size=1440x1440"
     map_url += "&maptype=roadmap"
+    map_url += "&markers=color:red"
 
     for marker in markers:
         if marker.lat and marker.lng:
-            map_url += f"&markers=color:red%7C{marker.lat},{marker.lng}"
+            map_url += f"|{marker.lat},{marker.lng}"
+
+    # for marker in markers:
+    #     if marker.lat and marker.lng:
+    #         map_url += f"&markers=color:red%7C{marker.lat},{marker.lng}"
+
+    print(map_url)
 
     response = requests.get(map_url)
-    image = Image.open(io.BytesIO(response.content)).resize(map(int, size.split('x')))
+    dataBytesIO = io.BytesIO(response.content)
+    dataBytesIO.seek(0)
+    image = Image.open(dataBytesIO).resize(map(int, size.split('x')))
+    # image = Image.open(io.BytesIO(response.content)).resize(map(int, size.split('x')))
     photo = ImageTk.PhotoImage(image)
 
     return photo

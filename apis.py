@@ -74,7 +74,7 @@ def get_ro(key, dong):
     response = requests.get(url, params=params)
     return response.content.decode('utf-8')
 
-def get_googlemap(key, addr, size: str, markers: List[GeoCoord]=[], zoom=13):
+def get_googlemap(key, addr, size: str, zoom=13, markers: List[GeoCoord]=[], path: List[GeoCoord]=[]):
     gmaps = Client(key=key)
     center = gmaps.geocode(addr)[0]['geometry']['location']
     print(center)
@@ -86,10 +86,13 @@ def get_googlemap(key, addr, size: str, markers: List[GeoCoord]=[], zoom=13):
     map_url += "&size=1440x1440"
     map_url += "&maptype=roadmap"
     map_url += "&markers=color:red"
-
     for marker in markers:
         if marker.lat and marker.lng:
             map_url += f"|{marker.lat},{marker.lng}"
+    map_url += "&path=color:0x0000ff80|weight:5"
+    for p in path:
+        if p.lat and p.lng:
+            map_url += f"|{p.lat},{p.lng}"
 
     # for marker in markers:
     #     if marker.lat and marker.lng:

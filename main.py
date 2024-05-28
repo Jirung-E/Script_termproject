@@ -2,6 +2,7 @@ import json
 from tkinter import *
 from tkinter.ttk import Progressbar, Combobox
 from typing import List
+import folium
 
 from apis import *
 from charger_config import *
@@ -370,6 +371,7 @@ class MapWidgets:
         self.size = "900x900"
         self.address = "서울특별시 중구 을지로2가"
         self.markers = []
+        self.path = []
 
         # self.map = Canvas(self.master.map_frame, width=900, height=900, bg="white")        # 테스트시 api호출 막기 위해 캔버스로 대체
         
@@ -385,7 +387,7 @@ class MapWidgets:
         self.show_map()
 
     def show_map(self):
-        self.map_img = get_googlemap(service_key["google"], self.address, self.size, self.markers, self.zoom)
+        self.map_img = get_googlemap(service_key["google"], self.address, self.size, self.zoom, self.markers, self.path)
         self.map.configure(image=self.map_img)
 
     def place(self):

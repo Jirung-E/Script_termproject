@@ -94,12 +94,6 @@ def get_googlemap(key, addr, size: str, zoom=13, markers: List[GeoCoord]=[], pat
         if p.lat and p.lng:
             map_url += f"|{p.lat},{p.lng}"
 
-    # for marker in markers:
-    #     if marker.lat and marker.lng:
-    #         map_url += f"&markers=color:red%7C{marker.lat},{marker.lng}"
-
-    print(map_url)
-
     response = requests.get(map_url)
     dataBytesIO = io.BytesIO(response.content)
     dataBytesIO.seek(0)

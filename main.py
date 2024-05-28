@@ -103,7 +103,10 @@ class SearchWidgets:
         s = ""
         s += self.dosi_combobox.get() + " "
         s += self.sigungu_combobox.get() + " "
-        s += self.search_input.get()
+
+        addr = self.search_input.get()
+        if addr != "상세주소" and addr != "":
+            s += addr
         return s
 
     def search(self, addr: str):
@@ -136,9 +139,6 @@ class SearchWidgets:
 
     def update_favorites(self, event):
         addr = self.make_address().strip()
-
-        if addr == "상세주소" or addr == "":
-            return
         
         if addr in favorites_list:
             self.add_to_favorites_button.configure(image=self.star_filled_img)
@@ -212,6 +212,8 @@ class FavoritesWidgets:
         self.master.search_widgets.search_input.insert(0, self.listbox.get(self.listbox.curselection()))
         self.master.search_widgets.update_favorites(None)
         self.master.search_widgets.search(self.listbox.get(self.listbox.curselection()))
+        self.master.search_widgets.dosi_combobox.set('')
+        self.master.search_widgets.sigungu_combobox.set('')
 
 
 class RecentWidgets:
@@ -241,6 +243,8 @@ class RecentWidgets:
         self.master.search_widgets.search_input.insert(0, self.listbox.get(self.listbox.curselection()))
         self.master.search_widgets.update_favorites(None)
         self.master.search_widgets.search(self.listbox.get(self.listbox.curselection()))
+        self.master.search_widgets.dosi_combobox.set('')
+        self.master.search_widgets.sigungu_combobox.set('')
 
 
 class InfoWidgets:

@@ -89,6 +89,7 @@ class SearchWidgets:
     def select_dosi(self, event):
         dosi = self.dosi_combobox.get()
         self.sigungu_combobox['values'] = list(region_code[dosi]["sigungu"].keys())
+        self.sigungu_combobox.current(0)
 
     def select_sigungu(self, event):
         dosi = self.dosi_combobox.get()
@@ -206,6 +207,7 @@ class FavoritesWidgets:
         self.master.search_widgets.search_input.delete(0, END)
         self.master.search_widgets.search_input.foc_in(None)
         self.master.search_widgets.search_input.insert(0, self.listbox.get(self.listbox.curselection()))
+        self.master.search_widgets.update_favorites(None)
         self.master.search_widgets.search(self.listbox.get(self.listbox.curselection()))
 
 
@@ -234,6 +236,7 @@ class RecentWidgets:
         self.master.search_widgets.search_input.delete(0, END)
         self.master.search_widgets.search_input.foc_in(None)
         self.master.search_widgets.search_input.insert(0, self.listbox.get(self.listbox.curselection()))
+        self.master.search_widgets.update_favorites(None)
         self.master.search_widgets.search(self.listbox.get(self.listbox.curselection()))
 
 

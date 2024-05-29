@@ -2,10 +2,12 @@ import json
 from tkinter import *
 from tkinter.ttk import Progressbar, Combobox
 from typing import List
+from PIL import ImageTk
 
 from apis import *
 from charger_config import *
 from placeholder import *
+from gmail import *
 
 
 button_font = ("맑은 고딕", 24)
@@ -376,10 +378,11 @@ class MapWidgets:
         self.markers = []
         self.path = []
 
-        self.map = Canvas(self.master.map_frame, width=900, height=900, bg="white")        # 테스트시 api호출 막기 위해 캔버스로 대체
+        # self.map = Canvas(self.master.map_frame, width=900, height=900, bg="white")        # 테스트시 api호출 막기 위해 캔버스로 대체
         
-        # self.map_img = get_googlemap(service_key["google"], self.address, self.size)
-        # self.map = Label(self.master.map_frame, image=self.map_img)
+        self.map_img = get_googlemap(service_key["google"], self.address, self.size)
+        self.map_tkimg = ImageTk.PhotoImage(self.map_img)
+        self.map = Label(self.master.map_frame, image=self.map_tkimg)
 
         self.zoom_in_button = Button(self.master.map_frame, text="+", font=("Consolas", 40), command=self.zoom_in)
         self.zoom_out_button = Button(self.master.map_frame, text="-", font=("Consolas", 48), command=self.zoom_out)
@@ -391,7 +394,8 @@ class MapWidgets:
 
     def show_map(self):
         self.map_img = get_googlemap(service_key["google"], self.address, self.size, self.zoom, self.markers, self.path)
-        self.map.configure(image=self.map_img)
+        self.map_tkimg = ImageTk.PhotoImage(self.map_img)
+        self.map.configure(image=self.map_tkimg)
 
     def place(self):
         self.map.pack()
@@ -409,6 +413,91 @@ class MapWidgets:
         if self.zoom < 5:
             self.zoom = 5
         self.show_map()
+
+
+class ShareWindow:
+    def __init__(self, master):
+        self.master = master
+        
+        self.share_window = Toplevel(self.master.window)
+        self.share_window.resizable(0, 0)
+        self.share_window.geometry("600x450")
+        self.share_window.title('공유')
+        self.share_window.attributes('-topmost', 'true')
+        self.share_window.grab_set()
+        self.share_window.focus_set()
+
+        bold_font = ("맑은 고딕", 24, "bold")
+
+        Label(self.share_window, text="From:", font=bold_font
+              ).place(x=10, y=10, height=50)
+
+        y = 70
+        Label(self.share_window, text="email", font=default_font
+              ).place(x=10, y=y, height=50)
+        self.from_mail_address = StringVar()
+        Entry(self.share_window, font=default_font, width=30, 
+              textvariable=self.from_mail_address
+              ).place(x=140, y=y, width=200, height=50)
+        Label(self.share_window, text="@", font=default_font
+              ).place(x=340, y=y, width=30, height=50)
+        self.from_mails = ["gmail.com", "tukorea.ac.kr"]
+        self.from_mail_address_combobox = Combobox(
+            self.share_window, values=self.from_mails,
+            font=default_font, width=30, state="readonly"
+        )
+        self.from_mail_address_combobox.place(x=370, y=y, width=200, height=50)
+        
+        y += 60
+        Label(self.share_window, text="password", font=default_font
+              ).place(x=10, y=y, height=50)
+        self.from_mail_password = StringVar()
+        Entry(self.share_window, font=default_font, width=30, 
+              textvariable=self.from_mail_password, show="*"
+              ).place(x=140, y=y, width=200, height=50)
+        caution_font = ("맑은 고딕", 12)
+        Label(self.share_window, text="구글 앱 비밀번호를 입력하세요", 
+              fg="gray", font=caution_font
+              ).place(x=340, y=y, width=250, height=50)
+        
+        y += 90
+        Label(self.share_window, text="To:", font=bold_font
+              ).place(x=10, y=y, height=50)
+        
+        y += 60
+        Label(self.share_window, text="email", font=default_font
+              ).place(x=10, y=y, height=50)
+        self.to_mail_address_1 = StringVar()
+        Entry(self.share_window, font=default_font, width=30, 
+              textvariable=self.to_mail_address_1
+              ).place(x=140, y=y, width=200, height=50)
+        Label(self.share_window, text="@", font=default_font
+              ).place(x=340, y=y, width=30, height=50)
+        self.to_mail_address_2 = StringVar()
+        Entry(self.share_window, font=default_font, width=30,
+              textvariable=self.to_mail_address_2
+              ).place(x=370, y=y, width=200, height=50)
+
+        y += 90
+        Button(self.share_window, text="전송", font=default_font,
+               command=lambda: self.send_email()
+               ).place(x=480, y=y, width=90, height=50)
+    
+    def send_email(self):
+        # 전송성공시에만 창을 닫음
+        from_addr = self.from_mail_address.get() + "@" + self.from_mail_address_combobox.get()
+        passwd = self.from_mail_password.get()
+        to_addr = self.to_mail_address_1.get() + "@" + self.to_mail_address_2.get()
+        title = "전기차 충전소 정보"
+        msgtext = self.master.map_widgets.address
+        msgtext += "\n\n"
+        for charger in self.master.search_widgets.chargers:
+            msgtext += charger.name + " - "
+            msgtext += charger.addr + "\n"
+        img = self.master.map_widgets.map_img.tostring()
+        sendMain(from_addr, passwd, to_addr, title, msgtext, img)
+        self.share_window.destroy()
+
 
 
 class GUI:
@@ -481,27 +570,7 @@ class GUI:
         self.recent_widgets.enable(True)
 
     def share(self):
-        self.share_window = Toplevel(self.window)
-        self.share_window.resizable(0, 0)
-        self.share_window.geometry("600x70")
-        self.share_window.title('공유')
-        self.share_window.attributes('-topmost', 'true')
-        self.share_window.grab_set()
-        self.share_window.focus_set()
-
-        share_label = Label(self.share_window, text="email", font=default_font)
-        share_label.place(x=10, y=10, width=100, height=50)
-
-        share_entry = Entry(self.share_window, font=default_font, width=30)
-        share_entry.place(x=120, y=10, width=400, height=50)
-
-        self.img = PhotoImage(file="img/send.png")
-        share_button = Button(self.share_window, image=self.img,
-                              command=lambda: self.send_email(share_entry.get()))
-        share_button.place(x=530, y=10, width=50, height=50)
-
-    def send_email(self, email):
-        self.share_window.destroy()
+        ShareWindow(self)
 
 
 if __name__ == "__main__":

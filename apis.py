@@ -1,6 +1,6 @@
 import requests
 import io
-from PIL import Image, ImageTk
+from PIL import Image
 from googlemaps import Client
 from typing import List
 
@@ -98,7 +98,5 @@ def get_googlemap(key, addr, size: str, zoom=13, markers: List[GeoCoord]=[], pat
     dataBytesIO = io.BytesIO(response.content)
     dataBytesIO.seek(0)
     image = Image.open(dataBytesIO).resize(map(int, size.split('x')))
-    # image = Image.open(io.BytesIO(response.content)).resize(map(int, size.split('x')))
-    photo = ImageTk.PhotoImage(image)
 
-    return photo
+    return image

@@ -2,7 +2,6 @@ import json
 from tkinter import *
 from tkinter.ttk import Progressbar, Combobox
 from typing import List
-import folium
 
 from apis import *
 from charger_config import *
@@ -377,10 +376,10 @@ class MapWidgets:
         self.markers = []
         self.path = []
 
-        # self.map = Canvas(self.master.map_frame, width=900, height=900, bg="white")        # 테스트시 api호출 막기 위해 캔버스로 대체
+        self.map = Canvas(self.master.map_frame, width=900, height=900, bg="white")        # 테스트시 api호출 막기 위해 캔버스로 대체
         
-        self.map_img = get_googlemap(service_key["google"], self.address, self.size)
-        self.map = Label(self.master.map_frame, image=self.map_img)
+        # self.map_img = get_googlemap(service_key["google"], self.address, self.size)
+        # self.map = Label(self.master.map_frame, image=self.map_img)
 
         self.zoom_in_button = Button(self.master.map_frame, text="+", font=("Consolas", 40), command=self.zoom_in)
         self.zoom_out_button = Button(self.master.map_frame, text="-", font=("Consolas", 48), command=self.zoom_out)
@@ -482,7 +481,27 @@ class GUI:
         self.recent_widgets.enable(True)
 
     def share(self):
-        pass
+        self.share_window = Toplevel(self.window)
+        self.share_window.resizable(0, 0)
+        self.share_window.geometry("600x70")
+        self.share_window.title('공유')
+        self.share_window.attributes('-topmost', 'true')
+        self.share_window.grab_set()
+        self.share_window.focus_set()
+
+        share_label = Label(self.share_window, text="email", font=default_font)
+        share_label.place(x=10, y=10, width=100, height=50)
+
+        share_entry = Entry(self.share_window, font=default_font, width=30)
+        share_entry.place(x=120, y=10, width=400, height=50)
+
+        self.img = PhotoImage(file="img/send.png")
+        share_button = Button(self.share_window, image=self.img,
+                              command=lambda: self.send_email(share_entry.get()))
+        share_button.place(x=530, y=10, width=50, height=50)
+
+    def send_email(self, email):
+        self.share_window.destroy()
 
 
 if __name__ == "__main__":

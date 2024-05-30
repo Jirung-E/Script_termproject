@@ -485,7 +485,6 @@ class ShareWindow:
                ).place(x=480, y=y, width=90, height=50)
     
     def send_email(self):
-        # 전송성공시에만 창을 닫음
         from_addr = self.from_mail_address.get() + "@" + self.from_mail_address_combobox.get()
         passwd = self.from_mail_password.get()
         to_addr = self.to_mail_address_1.get() + "@" + self.to_mail_address_2.get()
@@ -500,6 +499,7 @@ class ShareWindow:
         byte_buffer = BytesIO()
         img.save(byte_buffer, "PNG")
         sendMain(from_addr, passwd, to_addr, title, msgtext, byte_buffer.getvalue())
+
         self.share_window.destroy()
 
 

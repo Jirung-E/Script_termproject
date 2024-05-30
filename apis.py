@@ -7,11 +7,6 @@ from typing import List
 from charger_config import *
 
 
-def get_location():
-    url = "http://ip-api.com/json"
-    response = requests.get(url)
-    return response.json()
-
 def get_region_code(key, addr: str):
     url = "http://apis.data.go.kr/1741000/StanReginCd/getStanReginCdList"
     url += "?serviceKey=" + key
@@ -57,22 +52,6 @@ def get_chargers_in_region(key, region_code, page=1):
         ))
 
     return chargers
-
-def get_data(key, addr):
-    url = "https://api.odcloud.kr/api/EvInfoServiceV2/v1/getEvSearchList"
-    queryParams = {
-        "serviceKey": key,
-        "cond[addr::LIKE]": addr,
-    }
-
-    return requests.get(url, params=queryParams).json()
-
-def get_ro(key, dong):
-    url = 'http://openapi.epost.go.kr/postal/retrieveNewAdressAreaCdService/retrieveNewAdressAreaCdService/getNewAddressListAreaCd'
-    params = {'serviceKey' : key, 'searchSe' : 'dong', 'srchwrd' : dong, 'countPerPage' : '10', 'currentPage' : '1'}
-
-    response = requests.get(url, params=params)
-    return response.content.decode('utf-8')
 
 def get_googlemap(key, addr, size: str, zoom=13, markers: List[GeoCoord]=[], path: List[GeoCoord]=[]):
     gmaps = Client(key=key)

@@ -3,6 +3,7 @@ from tkinter import *
 from tkinter.ttk import Progressbar, Combobox
 from typing import List
 from PIL import ImageTk
+from io import BytesIO
 
 from apis import *
 from charger_config import *
@@ -489,15 +490,17 @@ class ShareWindow:
         passwd = self.from_mail_password.get()
         to_addr = self.to_mail_address_1.get() + "@" + self.to_mail_address_2.get()
         title = "전기차 충전소 정보"
-        msgtext = self.master.map_widgets.address
+        msgtext = "<h6>" + self.master.map_widgets.address + "</h6>"
         msgtext += "\n\n"
         for charger in self.master.search_widgets.chargers:
-            msgtext += charger.name + " - "
-            msgtext += charger.addr + "\n"
-        img = self.master.map_widgets.map_img.tostring()
-        sendMain(from_addr, passwd, to_addr, title, msgtext, img)
+            msgtext += "<p>" + charger.name + "(" +charger.addr + ") </p>\n"
+        msgtext += "\n"
+        msgtext += "<img src='cid:image1'>"
+        img = self.master.map_widgets.map_img
+        byte_buffer = BytesIO()
+        img.save(byte_buffer, "PNG")
+        sendMain(from_addr, passwd, to_addr, title, msgtext, byte_buffer.getvalue())
         self.share_window.destroy()
-
 
 
 class GUI:

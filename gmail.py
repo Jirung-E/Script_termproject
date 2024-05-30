@@ -2,7 +2,7 @@ from email.mime.base import MIMEBase
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 import smtplib
-import markdown
+# import markdown
 
 
 host = "smtp.gmail.com"
@@ -15,7 +15,8 @@ def sendMain(from_addr, passwd, to_addr, title, msgtext, img=None):
     msg['From'] = from_addr
     msg['To'] = to_addr
 
-    msg.attach(MIMEText(markdown.Markdown().convert(msgtext), 'html'))
+    msg.attach(MIMEText(msgtext, 'html'))
+    # msg.attach(MIMEText(markdown.Markdown().convert(msgtext), 'html'))
 
     if img:
         imagePart = MIMEImage(img)

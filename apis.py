@@ -105,9 +105,28 @@ def grouped_markers(markers: List[GeoCoord], zoom: int) -> List[GeoCoord]:
 
     return groups
 
-def only_in_map(markers: List[GeoCoord], center: Dict[str, float], zoom: int) -> List[GeoCoord]:
+def only_in_map(coords: List[GeoCoord], center: Dict[str, float], zoom: int) -> List[GeoCoord]:
     limit = 0.055 * (2 ** (13 - zoom))
-    return [*filter(lambda marker: abs(marker.lat - center['lat']) < limit and abs(marker.lng - center['lng']) < limit, markers)]
+    return [*filter(lambda coord: abs(coord.lat - center['lat']) < limit and abs(coord.lng - center['lng']) < limit, coords)]
+
+
+def zoom_path(path: List[GeoCoord], zoom: int) -> List[GeoCoord]:
+    if not path:
+        return []
+
+    distance = (0.055 * (2 ** (13 - zoom))) / 20
+    distance2 = distance ** 2
+
+    zoomed_path = [path[0]]
+    pivot = path[0]
+    for i, coord in enumerate(path):
+        if distance2_between(coord, pivot) > distance2:
+            pivot = coord
+            zoomed_path.append(coord)
+    zoomed_path.append(path[-1])
+
+    return zoomed_path
+
 
 def get_googlemap(key, addr, size: str, zoom=13, markers: List[GeoCoord]=[], path: List[GeoCoord]=[]):
     gmaps = Client(key=key)
@@ -119,18 +138,33 @@ def get_googlemap(key, addr, size: str, zoom=13, markers: List[GeoCoord]=[], pat
     map_url += "&zoom=" + str(zoom)
     map_url += "&size=1440x1440"
     map_url += "&maptype=roadmap"
-    map_url += "&markers=color:red"
 
-    markers = only_in_map(markers, center, zoom)
-    markers = grouped_markers(markers, zoom)
+    if markers:
+        markers = only_in_map(markers, center, zoom)
+        markers = grouped_markers(markers, zoom)
 
-    for marker in markers:
-        if marker.lat and marker.lng:
-            map_url += f"|{marker.lat},{marker.lng}"
-    map_url += "&path=color:0x0000ff|weight:5"
-    for p in path:
-        if p.lat and p.lng:
-            map_url += f"|{p.lat},{p.lng}"
+        if path:
+            map_url += "&markers=color:gray"
+        else:
+            map_url += "&markers=color:red"
+
+        for marker in markers:
+            if marker.lat and marker.lng:
+                map_url += f"|{marker.lat},{marker.lng}"
+
+    if path:
+        map_url += "&markers=color:red"
+        map_url += f"|{path[0].lat},{path[0].lng}"
+        map_url += f"|{path[-1].lat},{path[-1].lng}"
+        
+        path = only_in_map(path, center, zoom)      # 구불구불한 경로의 경우 이상해질수 있으니 하지 않는게 좋겠지만 일단 이대로
+        path = zoom_path(path, zoom)
+
+        map_url += "&path=color:blue|weight:5"
+
+        for p in path:
+            if p.lat and p.lng:
+                map_url += f"|{p.lat},{p.lng}"
 
     response = requests.get(map_url)
     dataBytesIO = io.BytesIO(response.content)

@@ -23,7 +23,6 @@ def get_region_code(key, addr: str):
 
     return code
 
-# def group_by_address(self, chargers: List[Charger]):
 
 def get_chargers_in_region(key, region_code, page=1) -> List[ChargerGroup]:
     url = "http://apis.data.go.kr/B552584/EvCharger/getChargerInfo"
@@ -113,7 +112,6 @@ def only_in_map(markers: List[GeoCoord], center: Dict[str, float], zoom: int) ->
 def get_googlemap(key, addr, size: str, zoom=13, markers: List[GeoCoord]=[], path: List[GeoCoord]=[]):
     gmaps = Client(key=key)
     center = gmaps.geocode(addr)[0]['geometry']['location']
-    print(center)
 
     map_url = "https://maps.googleapis.com/maps/api/staticmap"
     map_url += "?key=" + key
@@ -129,7 +127,7 @@ def get_googlemap(key, addr, size: str, zoom=13, markers: List[GeoCoord]=[], pat
     for marker in markers:
         if marker.lat and marker.lng:
             map_url += f"|{marker.lat},{marker.lng}"
-    map_url += "&path=color:0x0000ff80|weight:5"
+    map_url += "&path=color:0x0000ff|weight:5"
     for p in path:
         if p.lat and p.lng:
             map_url += f"|{p.lat},{p.lng}"
@@ -140,3 +138,31 @@ def get_googlemap(key, addr, size: str, zoom=13, markers: List[GeoCoord]=[], pat
     image = Image.open(dataBytesIO).resize(map(int, size.split('x')))
 
     return image
+
+
+def get_path(key, origin, destination):
+    headers = {
+        "X-NCP-APIGW-API-KEY-ID": key["client_id"],
+        "X-NCP-APIGW-API-KEY": key["client_secret"],
+    }
+
+    url = "https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode"
+    url += "?query=" + origin
+    data = requests.get(url, headers=headers).json()
+    origin = GeoCoord(data["addresses"][0]["y"], data["addresses"][0]["x"])
+
+    url = "https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode"
+    url += "?query=" + destination
+    data = requests.get(url, headers=headers).json()
+    destination = GeoCoord(data["addresses"][0]["y"], data["addresses"][0]["x"])
+
+    url = "https://naveropenapi.apigw.ntruss.com/map-direction/v1/driving"
+    url += "?start={},{}".format(origin.lng, origin.lat)
+    url += "&goal={},{}".format(destination.lng, destination.lat)   # 구글이랑은 lat, lng 받는 순서가 다르다
+    url += "&option=trafast"    # 빠른길
+
+    data = requests.get(url, headers=headers).json()
+    path = data["route"]["trafast"][0]["path"]
+    path = [GeoCoord(p[1], p[0]) for p in path]
+    
+    return path

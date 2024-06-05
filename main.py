@@ -182,7 +182,9 @@ class SearchWidgets:
         charger_coords = [chargers.getAverageCoord() for chargers in self.chargers]
         self.master.update_map(
             selected_charger_group.addr, 
-            charger_coords
+            charger_coords,
+            self.make_address().strip(),
+            selected_charger_group.addr
         )
         
         self.master.info_widgets.details_listbox.delete(0, END)
@@ -472,9 +474,13 @@ class MapWidgets:
         self.zoom_in_button = Button(self.frame, text="+", font=("Consolas", 40), command=self.zoom_in)
         self.zoom_out_button = Button(self.frame, text="-", font=("Consolas", 48), command=self.zoom_out)
 
-    def update_map(self, addr, markers=[]):
+    def update_map(self, addr, markers=[], origin=None, destination=None):
         self.address = addr
         self.markers = markers
+        if origin is not None and destination is not None:
+            self.path = get_path(service_key["naver"], origin, destination)
+        else:
+            self.path = []
         self.show_map()
 
     def show_map(self):
@@ -704,8 +710,8 @@ class GUI:
         self.window.mainloop()
 
 
-    def update_map(self, addr, markers=[]):
-        self.map_widgets.update_map(addr, markers)
+    def update_map(self, addr, markers=[], origin=None, destination=None):
+        self.map_widgets.update_map(addr, markers, origin, destination)
 
     def switch_to_search_mode(self):
         self.search_widgets.enable(True)

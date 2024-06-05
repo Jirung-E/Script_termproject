@@ -15,15 +15,13 @@
 
 
 ## 추가
-- 길 알려주기: https://developers.google.com/maps/documentation/javascript/directions?hl=ko  
-- https://console.cloud.google.com/apis/library/browse?filter=category:maps&project=scriptlangtermproject&supportedpurview=project
+구글 길찾기가 작동하지 않는 관계로 네이버 길찾기 사용  
+네이버 Maps API  
 
 ## 변경할거
-모든 충전소 위치를 미리 로드하도록? -> 너무 오래걸릴듯  
-같은 장소에 있는 충전소는 한개만 표시, 클릭시 상세정보에는 전부 표시  
 선택한 충전기는 마커색 다르게 표시  
-이미지 범위 밖의 마커는 링크를 넘기지 않음 -> 이거 어케함?? 그냥 거리순으로 하고, 너무 먼건 제거하는 식으로  
-가까운 마커는 하나만 표시  
+path가 있다면 다른 마커들은 회색으로 표시, 도착지는 빨간색, 출발지는 초록색으로 표시  
+path의 양이 너무 많아서 이미지 로드가 안되는 현상이 또 발생 -> path를 줄이는 방법?  
 
 
 
@@ -51,9 +49,6 @@ zoom == 13일때 대략 ±0.055가 한계.
 
 
 ## Marker Grouping
-https://developers.google.com/maps/documentation/javascript/marker-clustering?hl=ko  
-어쨌든 마커를 넘겨줘야할거기 때문에 이건 못쓸거같다.  
-
 0. 보이는 지점의 마커만 가지고 수행
 1. 아무 점 하나 잡기
 2. 합칠 범위 설정(배율에 따라 다름)
@@ -71,4 +66,10 @@ radius = (0.055 * (2 ** (13 - zoom))) / 10
 ```
 일때  
 ![image](img/r_10.png)
+
+```py
+radius = (0.055 * (2 ** (13 - zoom))) / 20
+```
+일때
+![image](img/r_20.png)
 

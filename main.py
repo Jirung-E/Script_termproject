@@ -147,8 +147,12 @@ class SearchWidgets:
                 recent_list.remove(addr)
             recent_list.insert(0, addr)
 
+            gmaps = Client(key=service_key["google"])
+            center = gmaps.geocode(addr)[0]['geometry']['location']
+            center = GeoCoord(center['lat'], center['lng'])
+            self.chargers.sort(key=lambda x: distance2_between(x.getAverageCoord(), center))
             for chargers in self.chargers:
-                self.result_listbox.insert(END, chargers.getNames())      # TODO: 거리순 정렬
+                self.result_listbox.insert(END, chargers.getNames())
         
         charger_coords = [chargers.getAverageCoord() for chargers in self.chargers]
         self.master.info_widgets.set_graph(self.chargers)

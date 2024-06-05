@@ -151,8 +151,8 @@ class SearchWidgets:
                 self.result_listbox.insert(END, chargers.getNames())      # TODO: 거리순 정렬
         
         charger_coords = [chargers.getAverageCoord() for chargers in self.chargers]
-        self.master.update_map(addr, charger_coords)
         self.master.info_widgets.set_graph(self.chargers)
+        self.master.update_map(addr, charger_coords)
 
     def update_favorites(self, event):
         addr = self.make_address().strip()
@@ -475,10 +475,10 @@ class MapWidgets:
     def update_map(self, addr, markers=[]):
         self.address = addr
         self.markers = markers
-        self.map_img = get_googlemap(service_key["google"], self.address, self.size, self.zoom, self.markers, self.path)
         self.show_map()
 
     def show_map(self):
+        self.map_img = get_googlemap(service_key["google"], self.address, self.size, self.zoom, self.markers, self.path)
         self.map_tkimg = ImageTk.PhotoImage(self.map_img)
         self.map.configure(image=self.map_tkimg)
 
@@ -489,14 +489,14 @@ class MapWidgets:
 
     def zoom_in(self):
         self.zoom += 1
-        if self.zoom > 20:
-            self.zoom = 20
+        if self.zoom > 18:
+            self.zoom = 18
         self.show_map()
 
     def zoom_out(self):
         self.zoom -= 1
-        if self.zoom < 5:
-            self.zoom = 5
+        if self.zoom < 7:
+            self.zoom = 7
         self.show_map()
 
 

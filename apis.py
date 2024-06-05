@@ -29,7 +29,7 @@ def get_chargers_in_region(key, region_code, page=1) -> List[ChargerGroup]:
     url = "http://apis.data.go.kr/B552584/EvCharger/getChargerInfo"
     queryParams = {
         "serviceKey": key,
-        "numOfRows": 1000,
+        "numOfRows": 9999,
         "pageNo": page,
         "zscode": region_code,
         "dataType": "JSON",
@@ -76,6 +76,14 @@ def get_chargers_in_region(key, region_code, page=1) -> List[ChargerGroup]:
 
     return list(chargers.values())
 
+
+def cluster_markers(markers: List[GeoCoord], zoom: int) -> List[GeoCoord]:
+    return markers
+
+def only_in_map(markers: List[GeoCoord], center: Dict[str, float], zoom: int) -> List[GeoCoord]:
+    limit = 0.055 * (2 ** (13 - zoom))
+    return [*filter(lambda marker: abs(marker.lat - center['lat']) < limit and abs(marker.lng - center['lng']) < limit, markers)]
+
 def get_googlemap(key, addr, size: str, zoom=13, markers: List[GeoCoord]=[], path: List[GeoCoord]=[]):
     gmaps = Client(key=key)
     center = gmaps.geocode(addr)[0]['geometry']['location']
@@ -90,9 +98,12 @@ def get_googlemap(key, addr, size: str, zoom=13, markers: List[GeoCoord]=[], pat
     map_url += "&markers=color:red"
 
     # # <줌에 따른 마커 한계를 찾기 위한 테스트 코드>
-    # for i in range(0, 21):
-    #     map_url += f"|{center['lat'] + i/10000},{center['lng'] + i/10000}"
+    # limit = 0.055 * (2 ** (13 - zoom))
+    # map_url += f"|{center['lat']},{center['lng'] + limit}"
     # # </>
+
+    markers = only_in_map(markers, center, zoom)
+    markers = cluster_markers(markers, zoom)
 
     for marker in markers:
         if marker.lat and marker.lng:

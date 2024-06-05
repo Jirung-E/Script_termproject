@@ -1,6 +1,6 @@
 import json
 from tkinter import *
-from tkinter.ttk import Progressbar, Combobox
+from tkinter.ttk import Progressbar, Combobox, Notebook
 from typing import List
 from PIL import ImageTk
 from io import BytesIO
@@ -9,6 +9,10 @@ from apis import *
 from charger_config import *
 from placeholder import *
 from gmail import *
+
+
+
+
 
 
 button_font = ("맑은 고딕", 24)
@@ -34,40 +38,41 @@ region_code = {}
 
 
 class SearchWidgets:
-    def __init__(self, master):
+    def __init__(self, master, frame):
         self.master = master
+        self.frame = frame
 
         self.star_empty_img = PhotoImage(file="img/star_empty.png")
         self.star_filled_img = PhotoImage(file="img/star_filled.png")
         
         self.master.window.option_add('*TCombobox*Listbox.font', combobox_font)
 
-        self.dosi_combobox = Combobox(master.interaction_frame, font=combobox_font)
+        self.dosi_combobox = Combobox(self.frame, font=combobox_font)
         self.dosi_combobox['values'] = list(region_code.keys())
         self.dosi_combobox.bind("<<ComboboxSelected>>", self.select_dosi)
 
-        self.sigungu_combobox = Combobox(master.interaction_frame, font=combobox_font)
+        self.sigungu_combobox = Combobox(self.frame, font=combobox_font)
         self.sigungu_combobox['values'] = None
         self.sigungu_combobox.bind("<<ComboboxSelected>>", self.select_sigungu)
         
-        self.search_input = PlaceholderEntry(master.interaction_frame, 
+        self.search_input = PlaceholderEntry(self.frame, 
                                              placeholder="상세주소", 
                                              font=default_font)
         self.search_input.bind("<KeyPress>", self.press_enter)
         self.search_input.bind("<KeyRelease>", self.update_favorites)
         
         self.search_icon = PhotoImage(file="img/search_icon.png")
-        self.search_button = Button(master.interaction_frame, 
+        self.search_button = Button(self.frame, 
                                     image=self.search_icon,
                                     command=lambda: self.search(self.make_address()))
         
-        self.add_to_favorites_button = Button(master.interaction_frame, 
+        self.add_to_favorites_button = Button(self.frame, 
                                               image=self.star_empty_img,
                                               font=default_font, 
                                               command=self.add_to_favorites)
 
         
-        self.result_listbox = Listbox(master.interaction_frame, font=info_font)
+        self.result_listbox = Listbox(self.frame, font=info_font)
         self.result_listbox.bind("<Double-Button-1>", self.select_charger)
 
         self.widgets: List[Widget] = [
@@ -213,10 +218,11 @@ class SearchWidgets:
 
 
 class FavoritesWidgets:
-    def __init__(self, master):
+    def __init__(self, master, frame):
         self.master = master
+        self.frame = frame
 
-        self.listbox = Listbox(master.interaction_frame, font=default_font)
+        self.listbox = Listbox(self.frame, font=default_font)
         self.listbox.bind("<Double-Button-1>", self.select)
 
     def enable(self, enable):
@@ -260,10 +266,11 @@ class FavoritesWidgets:
 
 
 class RecentWidgets:
-    def __init__(self, master):
+    def __init__(self, master, frame):
         self.master = master
+        self.frame = frame
 
-        self.listbox = Listbox(master.interaction_frame, font=default_font)
+        self.listbox = Listbox(self.frame, font=default_font)
         self.listbox.bind("<Double-Button-1>", self.select)
 
     def enable(self, enable):
@@ -306,18 +313,19 @@ class RecentWidgets:
 
 
 class InfoWidgets:
-    def __init__(self, master):
+    def __init__(self, master, frame):
         self.master = master
+        self.frame = frame
 
-        self.details_listbox = Listbox(master.info_frame, font=info_font)
+        self.details_listbox = Listbox(self.frame, font=info_font)
 
         self.available_label =  Label(
-                                    master.info_frame, 
+                                    self.frame, 
                                     text="사용가능", 
                                     font=default_font
                                 )
         self.available_progress = Progressbar(
-                                    master.info_frame, 
+                                    self.frame, 
                                     orient=HORIZONTAL, 
                                     length=180, 
                                     mode='determinate', 
@@ -325,18 +333,18 @@ class InfoWidgets:
                                     value=0
                                 )
         self.available_count_label = Label(
-                                    master.info_frame, 
+                                    self.frame, 
                                     text="0개", 
                                     font=default_font
                                 )
 
         self.occupied_label =   Label(
-                                    master.info_frame, 
+                                    self.frame, 
                                     text="사용중", 
                                     font=default_font
                                 )
         self.occupied_progress = Progressbar(
-                                    master.info_frame, 
+                                    self.frame, 
                                     orient=HORIZONTAL, 
                                     length=180, 
                                     mode='determinate', 
@@ -344,18 +352,18 @@ class InfoWidgets:
                                     value=0
                                 )
         self.occupied_count_label = Label(
-                                    master.info_frame, 
+                                    self.frame, 
                                     text="0개", 
                                     font=default_font
                                 )
 
         self.disabled_label =   Label(
-                                    master.info_frame, 
+                                    self.frame, 
                                     text="사용불가", 
                                     font=default_font
                                 )
         self.disabled_progress = Progressbar(
-                                    master.info_frame, 
+                                    self.frame, 
                                     orient=HORIZONTAL, 
                                     length=180, 
                                     mode='determinate', 
@@ -363,7 +371,7 @@ class InfoWidgets:
                                     value=0
                                 )
         self.disabled_count_label = Label(
-                                    master.info_frame, 
+                                    self.frame, 
                                     text="0개", 
                                     font=default_font
                                 )
@@ -437,8 +445,9 @@ class InfoWidgets:
 
 
 class MapWidgets:
-    def __init__(self, master):
+    def __init__(self, master, frame):
         self.master = master
+        self.frame = frame
 
         self.zoom = 13
         self.size = "900x900"
@@ -446,14 +455,14 @@ class MapWidgets:
         self.markers = []
         self.path = []
 
-        # self.map = Canvas(self.master.map_frame, width=900, height=900, bg="white")        # 테스트시 api호출 막기 위해 캔버스로 대체
+        self.map = Canvas(self.frame, width=900, height=900, bg="white")        # 테스트시 api호출 막기 위해 캔버스로 대체
         
-        self.map_img = get_googlemap(service_key["google"], self.address, self.size)
-        self.map_tkimg = ImageTk.PhotoImage(self.map_img)
-        self.map = Label(self.master.map_frame, image=self.map_tkimg)
+        # self.map_img = get_googlemap(service_key["google"], self.address, self.size)
+        # self.map_tkimg = ImageTk.PhotoImage(self.map_img)
+        # self.map = Label(self.frame, image=self.map_tkimg)
 
-        self.zoom_in_button = Button(self.master.map_frame, text="+", font=("Consolas", 40), command=self.zoom_in)
-        self.zoom_out_button = Button(self.master.map_frame, text="-", font=("Consolas", 48), command=self.zoom_out)
+        self.zoom_in_button = Button(self.frame, text="+", font=("Consolas", 40), command=self.zoom_in)
+        self.zoom_out_button = Button(self.frame, text="-", font=("Consolas", 48), command=self.zoom_out)
 
     def update_map(self, addr, markers=[]):
         self.address = addr
@@ -591,56 +600,101 @@ class ShareWindow:
 
 
 
-class GUI:
-    def __init__(self):
-        self.window = Tk()
-        self.window.title("전기차 충전소 검색")
 
-        self.interaction_frame = Frame(self.window)
-        self.interaction_frame.pack(side=LEFT, fill=BOTH, expand=True)
 
-        # -- INTERACTION WIDGETS --
-        button_frame = Frame(self.interaction_frame, 
-                             width=400, height=100, 
-                             padx=10, pady=10)
-        self.search_button = Button(button_frame, text="검색", 
+
+
+class ButtonWidgets:
+    def __init__(self, master, frame):
+        self.master = master
+        self.frame = frame
+
+        self.search_button = Button(self.frame, text="검색", 
                                     font=button_font, 
-                                    command=self.switch_to_search_mode)
-        self.favorites_button = Button(button_frame, text="즐겨\n찾기", 
+                                    command=self.master.switch_to_search_mode)
+        self.favorites_button = Button(self.frame, text="즐겨\n찾기", 
                                        font=button_font, 
-                                       command=self.switch_to_favorites_mode)
-        self.recent_button = Button(button_frame, text="최근\n기록", 
+                                       command=self.master.switch_to_favorites_mode)
+        self.recent_button = Button(self.frame, text="최근\n기록", 
                                     font=button_font, 
-                                    command=self.switch_to_recent_mode)
-        self.share_button = Button(button_frame, text="공유", 
+                                    command=self.master.switch_to_recent_mode)
+        self.share_button = Button(self.frame, text="공유", 
                                    font=button_font, 
-                                   command=self.share)
-        button_frame.pack(side=TOP)
+                                   command=self.master.share)
+
+    def place(self):
         self.search_button.place(width=90, height=90)
         self.favorites_button.place(x=100, width=90, height=90)
         self.recent_button.place(x=200, width=90, height=90)
         self.share_button.place(x=300, width=90, height=90)
 
-        # -- INTERACTION WIDGETS --
-        self.search_widgets = SearchWidgets(self)
-        self.search_widgets.place()
-        self.favorites_widgets = FavoritesWidgets(self)
-        self.recent_widgets = RecentWidgets(self)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class GUI:
+    def __init__(self):
+        self.window = Tk()
+        self.window.title("전기차 충전소 검색")
+
+        notebook = Notebook(self.window)
+        notebook.pack()
+
+        self.main_page = Frame(self.window)
+        self.charger_info_page = Frame(self.window)
+        notebook.add(self.main_page, text="메인")
+        notebook.add(self.charger_info_page, text="충전기 정보")
+
+        # -- INTERACTION FRAMES --
+        self.interaction_frame = Frame(self.main_page)
+        self.interaction_frame.pack(side=LEFT, fill=BOTH, expand=True)
+
+        button_frame = Frame(self.interaction_frame, 
+                             width=400, height=100, padx=10, pady=10)
+        button_frame.pack(side=TOP)
 
         self.info_frame = Frame(self.interaction_frame, width=400, height=480)
         self.info_frame.pack(side=BOTTOM)
 
-        self.info_widgets = InfoWidgets(self)
+        # -- INTERACTION WIDGETS --
+        self.button_widgets = ButtonWidgets(self, button_frame)
+        self.button_widgets.place()
+
+        self.search_widgets = SearchWidgets(self, self.interaction_frame)
+        self.favorites_widgets = FavoritesWidgets(self, self.interaction_frame)
+        self.recent_widgets = RecentWidgets(self, self.interaction_frame)
+        self.search_widgets.place()
+
+        self.info_widgets = InfoWidgets(self, self.info_frame)
         self.info_widgets.place()
         
         # -- MAP WIDGETS --
-        self.map_frame = Frame(self.window, padx=10, pady=10)
+        self.map_frame = Frame(self.main_page, padx=10, pady=10)
         self.map_frame.pack(side=LEFT, fill=BOTH, expand=True)
         
-        self.map_widgets = MapWidgets(self)
+        self.map_widgets = MapWidgets(self, self.map_frame)
         self.map_widgets.place()
 
+
+        # -- CHARGER INFO WIDGETS --
+        self.charger_info_img = PhotoImage(file="img/charger_types.png")
+        self.charger_info_widgets = Label(self.charger_info_page, image=self.charger_info_img)
+        self.charger_info_widgets.pack()
+
+
         self.window.mainloop()
+
 
     def update_map(self, addr, markers=[]):
         self.map_widgets.update_map(addr, markers)

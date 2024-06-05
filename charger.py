@@ -1,7 +1,10 @@
+from typing import List
+
+
 class GeoCoord:
     def __init__(self, lat, lng):
-        self.lat = lat
-        self.lng = lng
+        self.lat = float(lat)
+        self.lng = float(lng)
 
 class Charger:
     def __init__(self, name, addr, coord, state, type, parking, limit, limit_detail, note, output, method):
@@ -73,3 +76,35 @@ class Charger:
         
     def getOutput(self):
         return self.output + 'kW'
+    
+
+
+
+class ChargerGroup:
+    def __init__(self, addr, chargers: List[Charger] = []):
+        self.addr: str = addr
+        self.names = set()
+        self.chargers: List[Charger] = []
+        self.available: int = 0
+        self.occupied: int = 0
+
+    def addCharger(self, charger: Charger):
+        self.chargers.append(charger)
+        self.names.add(charger.name)
+        if charger.getState() == '사용가능':
+            self.available += 1
+        elif charger.getState() == '사용중':
+            self.occupied += 1
+
+    def getNames(self):
+        return ', '.join(self.names)
+
+    def getAverageCoord(self) -> GeoCoord:
+        lat = 0
+        lng = 0
+
+        for charger in self.chargers:
+            lat += charger.coord.lat
+            lng += charger.coord.lng
+
+        return GeoCoord(lat / len(self.chargers), lng / len(self.chargers))

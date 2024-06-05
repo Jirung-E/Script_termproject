@@ -6,7 +6,7 @@ from PIL import ImageTk
 from io import BytesIO
 
 from apis import *
-from charger_config import *
+from charger import *
 from placeholder import *
 from gmail import *
 
@@ -141,17 +141,16 @@ class SearchWidgets:
             address.pop()
 
         if code is not None:
-            self.chargers: List[Charger] = get_chargers_in_region(service_key["decoding"], code)
-            # self.data = get_data(service_key["decoding"], addr)['data']
+            self.chargers: List[ChargerGroup] = get_chargers_in_region(service_key["decoding"], code)
 
             if addr in recent_list:
                 recent_list.remove(addr)
             recent_list.insert(0, addr)
 
-            for charger in self.chargers:
-                self.result_listbox.insert(END, charger.name)
+            for chargers in self.chargers:
+                self.result_listbox.insert(END, chargers.getNames())      # TODO: 거리순 정렬
         
-        charger_coords = [charger.coord for charger in self.chargers]
+        charger_coords = [chargers.getAverageCoord() for chargers in self.chargers]
         self.master.update_map(addr, charger_coords)
         self.master.info_widgets.set_graph(self.chargers)
 
@@ -178,29 +177,40 @@ class SearchWidgets:
             self.add_to_favorites_button.configure(image=self.star_empty_img)
 
     def select_charger(self, event):
-        charger_coords = [charger.coord for charger in self.chargers]
+        selected_charger_group: ChargerGroup = self.chargers[self.result_listbox.curselection()[0]]
+
+        charger_coords = [chargers.getAverageCoord() for chargers in self.chargers]
         self.master.update_map(
-            self.chargers[self.result_listbox.curselection()[0]].addr, 
+            selected_charger_group.addr, 
             charger_coords
         )
         
         self.master.info_widgets.details_listbox.delete(0, END)
-        self.master.info_widgets.details_listbox.insert(
-            END, self.chargers[self.result_listbox.curselection()[0]].addr)
-        self.master.info_widgets.details_listbox.insert(
-            END, self.chargers[self.result_listbox.curselection()[0]].getState())
-        self.master.info_widgets.details_listbox.insert(
-            END, self.chargers[self.result_listbox.curselection()[0]].getType())
-        self.master.info_widgets.details_listbox.insert(
-            END, "주차: " + self.chargers[self.result_listbox.curselection()[0]].getParking())
-        self.master.info_widgets.details_listbox.insert(
-            END, self.chargers[self.result_listbox.curselection()[0]].getLimit())
-        self.master.info_widgets.details_listbox.insert(
-            END, self.chargers[self.result_listbox.curselection()[0]].note)
-        self.master.info_widgets.details_listbox.insert(
-            END, "출력: " + self.chargers[self.result_listbox.curselection()[0]].getOutput())
-        self.master.info_widgets.details_listbox.insert(
-            END, "충전방식: " + self.chargers[self.result_listbox.curselection()[0]].method)
+
+        self.master.info_widgets.details_listbox.insert(END, 
+            selected_charger_group.addr)
+
+        for charger in selected_charger_group.chargers:
+            self.master.info_widgets.details_listbox.insert(END, "- - - - - - - - - - - -")
+
+            self.master.info_widgets.details_listbox.insert(END, 
+                "상태: " + charger.getState())
+            self.master.info_widgets.details_listbox.insert(END, 
+                "충전기 타입: " + charger.getType())
+            self.master.info_widgets.details_listbox.insert(END, 
+                "출력: " + charger.getOutput())
+            self.master.info_widgets.details_listbox.insert(END, 
+                "충전방식: " + charger.method)
+            self.master.info_widgets.details_listbox.insert(END, 
+                "주차: " + charger.getParking())
+            
+            limit = charger.getLimit()
+            self.master.info_widgets.details_listbox.insert(END, 
+                "제한사항: " + (limit if limit != "무제한" else "없음"))
+            
+            if charger.note != "":
+                self.master.info_widgets.details_listbox.insert(END, 
+                "비고: " + charger.note)
         
 
 
@@ -411,20 +421,18 @@ class InfoWidgets:
         self.disabled_progress.place(x=130, y=425, height=40)
         self.disabled_count_label.place(x=320, y=420)
 
-    def set_graph(self, chargers: List[Charger]):
+    def set_graph(self, chargers: List[ChargerGroup]):
         available = 0
         occupied = 0
-        disabled = 0
+        total = 0
 
         for charger in chargers:
-            if charger.getState() == "사용가능":
-                available += 1
-            elif charger.getState() == "사용중":
-                occupied += 1
-            else:
-                disabled += 1
+            available += charger.available
+            occupied += charger.occupied
+            total += len(charger.chargers)
 
-        total = available + occupied + disabled
+        disabled = total - available - occupied
+
         self.available_progress.configure(value=available, maximum=total)
         self.available_count_label.configure(text=f"{available}개")
         self.occupied_progress.configure(value=occupied, maximum=total)
@@ -455,11 +463,11 @@ class MapWidgets:
         self.markers = []
         self.path = []
 
-        self.map = Canvas(self.frame, width=900, height=900, bg="white")        # 테스트시 api호출 막기 위해 캔버스로 대체
+        # self.map = Canvas(self.frame, width=900, height=900, bg="white")        # 테스트시 api호출 막기 위해 캔버스로 대체
         
-        # self.map_img = get_googlemap(service_key["google"], self.address, self.size)
-        # self.map_tkimg = ImageTk.PhotoImage(self.map_img)
-        # self.map = Label(self.frame, image=self.map_tkimg)
+        self.map_img = get_googlemap(service_key["google"], self.address, self.size)
+        self.map_tkimg = ImageTk.PhotoImage(self.map_img)
+        self.map = Label(self.frame, image=self.map_tkimg)
 
         self.zoom_in_button = Button(self.frame, text="+", font=("Consolas", 40), command=self.zoom_in)
         self.zoom_out_button = Button(self.frame, text="-", font=("Consolas", 48), command=self.zoom_out)
@@ -467,10 +475,10 @@ class MapWidgets:
     def update_map(self, addr, markers=[]):
         self.address = addr
         self.markers = markers
+        self.map_img = get_googlemap(service_key["google"], self.address, self.size, self.zoom, self.markers, self.path)
         self.show_map()
 
     def show_map(self):
-        self.map_img = get_googlemap(service_key["google"], self.address, self.size, self.zoom, self.markers, self.path)
         self.map_tkimg = ImageTk.PhotoImage(self.map_img)
         self.map.configure(image=self.map_tkimg)
 

@@ -2,9 +2,9 @@ import requests
 import io
 from PIL import Image
 from googlemaps import Client
-from typing import List
+from typing import List, Dict
 
-from charger_config import *
+from charger import *
 
 
 def get_region_code(key, addr: str):
@@ -23,11 +23,13 @@ def get_region_code(key, addr: str):
 
     return code
 
-def get_chargers_in_region(key, region_code, page=1):
+# def group_by_address(self, chargers: List[Charger]):
+
+def get_chargers_in_region(key, region_code, page=1) -> List[ChargerGroup]:
     url = "http://apis.data.go.kr/B552584/EvCharger/getChargerInfo"
     queryParams = {
         "serviceKey": key,
-        "numOfRows": 500,
+        "numOfRows": 1000,
         "pageNo": page,
         "zscode": region_code,
         "dataType": "JSON",
@@ -35,11 +37,16 @@ def get_chargers_in_region(key, region_code, page=1):
 
     data = requests.get(url, params=queryParams).json()["items"]["item"]
 
-    chargers = []
+    chargers: Dict[str, ChargerGroup] = {}
     for item in data:
-        chargers.append(Charger(
+        addr = item["addr"]
+
+        if addr not in chargers.keys():
+            chargers[addr] = ChargerGroup(addr)
+
+        chargers[addr].addCharger(Charger(
             item["statNm"],
-            item["addr"],
+            addr,
             GeoCoord(item["lat"], item["lng"]),
             item["stat"],
             item["chgerType"],
@@ -51,7 +58,23 @@ def get_chargers_in_region(key, region_code, page=1):
             item["method"],
         ))
 
-    return chargers
+    # chargers = []
+    # for item in data:
+    #     chargers.append(Charger(
+    #         item["statNm"],
+    #         item["addr"],
+    #         GeoCoord(item["lat"], item["lng"]),
+    #         item["stat"],
+    #         item["chgerType"],
+    #         item["parkingFree"],
+    #         item["limitYn"],
+    #         item["limitDetail"],
+    #         item["note"],
+    #         item["output"],
+    #         item["method"],
+    #     ))
+
+    return list(chargers.values())
 
 def get_googlemap(key, addr, size: str, zoom=13, markers: List[GeoCoord]=[], path: List[GeoCoord]=[]):
     gmaps = Client(key=key)
@@ -65,6 +88,12 @@ def get_googlemap(key, addr, size: str, zoom=13, markers: List[GeoCoord]=[], pat
     map_url += "&size=1440x1440"
     map_url += "&maptype=roadmap"
     map_url += "&markers=color:red"
+
+    # # <줌에 따른 마커 한계를 찾기 위한 테스트 코드>
+    # for i in range(0, 21):
+    #     map_url += f"|{center['lat'] + i/10000},{center['lng'] + i/10000}"
+    # # </>
+
     for marker in markers:
         if marker.lat and marker.lng:
             map_url += f"|{marker.lat},{marker.lng}"

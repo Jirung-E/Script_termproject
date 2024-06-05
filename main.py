@@ -22,6 +22,17 @@ recent_list = []
 region_code = {}
 
 
+
+
+
+
+
+
+
+
+
+
+
 class SearchWidgets:
     def __init__(self, master):
         self.master = master
@@ -185,6 +196,20 @@ class SearchWidgets:
             END, "출력: " + self.chargers[self.result_listbox.curselection()[0]].getOutput())
         self.master.info_widgets.details_listbox.insert(
             END, "충전방식: " + self.chargers[self.result_listbox.curselection()[0]].method)
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 class FavoritesWidgets:
@@ -218,6 +243,22 @@ class FavoritesWidgets:
         self.master.search_widgets.sigungu_combobox.set('')
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 class RecentWidgets:
     def __init__(self, master):
         self.master = master
@@ -247,6 +288,21 @@ class RecentWidgets:
         self.master.search_widgets.search(self.listbox.get(self.listbox.curselection()))
         self.master.search_widgets.dosi_combobox.set('')
         self.master.search_widgets.sigungu_combobox.set('')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 class InfoWidgets:
@@ -369,6 +425,17 @@ class InfoWidgets:
         self.disabled_count_label.configure(text=f"{disabled}개")
 
 
+
+
+
+
+
+
+
+
+
+
+
 class MapWidgets:
     def __init__(self, master):
         self.master = master
@@ -414,6 +481,17 @@ class MapWidgets:
         if self.zoom < 5:
             self.zoom = 5
         self.show_map()
+
+
+
+
+
+
+
+
+
+
+
 
 
 class ShareWindow:
@@ -503,6 +581,16 @@ class ShareWindow:
         self.share_window.destroy()
 
 
+
+
+
+
+
+
+
+
+
+
 class GUI:
     def __init__(self):
         self.window = Tk()
@@ -574,6 +662,23 @@ class GUI:
 
     def share(self):
         ShareWindow(self)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 if __name__ == "__main__":

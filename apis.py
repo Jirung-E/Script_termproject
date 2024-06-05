@@ -58,27 +58,53 @@ def get_chargers_in_region(key, region_code, page=1) -> List[ChargerGroup]:
             item["method"],
         ))
 
-    # chargers = []
-    # for item in data:
-    #     chargers.append(Charger(
-    #         item["statNm"],
-    #         item["addr"],
-    #         GeoCoord(item["lat"], item["lng"]),
-    #         item["stat"],
-    #         item["chgerType"],
-    #         item["parkingFree"],
-    #         item["limitYn"],
-    #         item["limitDetail"],
-    #         item["note"],
-    #         item["output"],
-    #         item["method"],
-    #     ))
-
     return list(chargers.values())
 
 
-def cluster_markers(markers: List[GeoCoord], zoom: int) -> List[GeoCoord]:
-    return markers
+def distance2_between(coord1: GeoCoord, coord2: GeoCoord) -> float:
+    return (coord1.lat - coord2.lat) ** 2 + (coord1.lng - coord2.lng) ** 2
+
+
+def furthest_marker(markers: List[GeoCoord], center: GeoCoord) -> tuple[int, GeoCoord]:
+    far = markers[0]
+    index = 0
+    max_distance = distance2_between(far, center)
+    for i, marker in enumerate(markers):
+        distance = distance2_between(marker, center)
+        if distance > max_distance:
+            far = marker
+            index = i
+            max_distance = distance
+
+    return index, far
+
+
+def grouped_markers(markers: List[GeoCoord], zoom: int) -> List[GeoCoord]:
+    if not markers:
+        return []
+    
+    radius = (0.055 * (2 ** (13 - zoom))) / 20
+    radius2 = radius ** 2
+
+    groups = []
+    pivot = markers[0]
+    while markers:
+        idx, pivot = furthest_marker(markers, pivot)        # 아무 점이나 잡은 다음, 그 점에서 가장 먼 점을 찾는다.
+        cnt = 1
+        markers.pop(idx)
+        avg_lat = pivot.lat
+        avg_lng = pivot.lng
+
+        for i, marker in enumerate(markers):
+            if distance2_between(marker, pivot) < radius2:
+                markers.pop(i)
+                cnt += 1
+                avg_lat += marker.lat
+                avg_lng += marker.lng
+
+        groups.append(GeoCoord(avg_lat / cnt, avg_lng / cnt))
+
+    return groups
 
 def only_in_map(markers: List[GeoCoord], center: Dict[str, float], zoom: int) -> List[GeoCoord]:
     limit = 0.055 * (2 ** (13 - zoom))
@@ -97,13 +123,8 @@ def get_googlemap(key, addr, size: str, zoom=13, markers: List[GeoCoord]=[], pat
     map_url += "&maptype=roadmap"
     map_url += "&markers=color:red"
 
-    # # <줌에 따른 마커 한계를 찾기 위한 테스트 코드>
-    # limit = 0.055 * (2 ** (13 - zoom))
-    # map_url += f"|{center['lat']},{center['lng'] + limit}"
-    # # </>
-
     markers = only_in_map(markers, center, zoom)
-    markers = cluster_markers(markers, zoom)
+    markers = grouped_markers(markers, zoom)
 
     for marker in markers:
         if marker.lat and marker.lng:

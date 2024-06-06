@@ -471,7 +471,11 @@ class MapWidgets:
 
         # self.map = Canvas(self.frame, width=900, height=900, bg="white")        # 테스트시 api호출 막기 위해 캔버스로 대체
         
-        self.map_img = get_googlemap(service_key["google"], self.address, self.size)
+        gmaps = Client(key=service_key["google"])
+        center = gmaps.geocode(self.address)[0]['geometry']['location']
+        center = GeoCoord(center['lat'], center['lng'])
+
+        self.map_img = get_googlemap(service_key["google"], center, self.size)
         self.map_tkimg = ImageTk.PhotoImage(self.map_img)
         self.map = Label(self.frame, image=self.map_tkimg)
 
@@ -482,13 +486,30 @@ class MapWidgets:
         self.address = addr
         self.markers = markers
         if origin is not None and destination is not None:
-            self.path = get_path(service_key["naver"], origin, destination)
+            try:
+                self.path = get_path(service_key["naver"], origin, destination)
+            except:
+                self.path = []
+                print("경로를 찾을 수 없습니다.")
         else:
             self.path = []
         self.show_map()
 
     def show_map(self):
-        self.map_img = get_googlemap(service_key["google"], self.address, self.size, self.zoom, self.markers, self.path)
+        if self.path:
+            x_distance = abs(self.path[0].lat - self.path[-1].lat) / 2
+            y_distance = abs(self.path[0].lng - self.path[-1].lng) / 2
+            distance = x_distance if x_distance > y_distance else y_distance
+            while distance > 0.055 * (2 ** (13 - self.zoom)):
+                self.zoom -= 1
+
+            center = GeoCoord((self.path[0].lat + self.path[-1].lat) / 2, (self.path[0].lng + self.path[-1].lng) / 2)
+        else:
+            gmaps = Client(key=service_key["google"])
+            center = gmaps.geocode(self.address)[0]['geometry']['location']
+            center = GeoCoord(center['lat'], center['lng'])
+            
+        self.map_img = get_googlemap(service_key["google"], center, self.size, self.zoom, self.markers, self.path)
         self.map_tkimg = ImageTk.PhotoImage(self.map_img)
         self.map.configure(image=self.map_tkimg)
 

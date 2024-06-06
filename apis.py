@@ -105,9 +105,10 @@ def grouped_markers(markers: List[GeoCoord], zoom: int) -> List[GeoCoord]:
 
     return groups
 
-def only_in_map(coords: List[GeoCoord], center: Dict[str, float], zoom: int) -> List[GeoCoord]:
+
+def only_in_map(coords: List[GeoCoord], center: GeoCoord, zoom: int) -> List[GeoCoord]:
     limit = 0.055 * (2 ** (13 - zoom))
-    return [*filter(lambda coord: abs(coord.lat - center['lat']) < limit and abs(coord.lng - center['lng']) < limit, coords)]
+    return [*filter(lambda coord: abs(coord.lat - center.lat) < limit and abs(coord.lng - center.lng) < limit, coords)]
 
 
 def zoom_path(path: List[GeoCoord], zoom: int) -> List[GeoCoord]:
@@ -128,13 +129,10 @@ def zoom_path(path: List[GeoCoord], zoom: int) -> List[GeoCoord]:
     return zoomed_path
 
 
-def get_googlemap(key, addr, size: str, zoom=13, markers: List[GeoCoord]=[], path: List[GeoCoord]=[]):
-    gmaps = Client(key=key)
-    center = gmaps.geocode(addr)[0]['geometry']['location']
-
+def get_googlemap(key, center: GeoCoord, size: str, zoom=13, markers: List[GeoCoord]=[], path: List[GeoCoord]=[]):
     map_url = "https://maps.googleapis.com/maps/api/staticmap"
     map_url += "?key=" + key
-    map_url += f"&center={center['lat']},{center['lng']}"
+    map_url += f"&center={center.lat},{center.lng}"
     map_url += "&zoom=" + str(zoom)
     map_url += "&size=1440x1440"
     map_url += "&maptype=roadmap"
@@ -142,21 +140,19 @@ def get_googlemap(key, addr, size: str, zoom=13, markers: List[GeoCoord]=[], pat
     if markers:
         markers = only_in_map(markers, center, zoom)
         markers = grouped_markers(markers, zoom)
-
+        
+        map_url += "&markers=color:red"
         if path:
-            map_url += "&markers=color:gray"
-        else:
-            map_url += "&markers=color:red"
+            map_url += f"|{path[-1].lat},{path[-1].lng}"
+            map_url += "&markers=color:blue"
+            map_url += f"|{path[0].lat},{path[0].lng}"
+            map_url += "&markers=color:gray|size:small"
 
         for marker in markers:
             if marker.lat and marker.lng:
                 map_url += f"|{marker.lat},{marker.lng}"
 
-    if path:
-        map_url += "&markers=color:red"
-        map_url += f"|{path[0].lat},{path[0].lng}"
-        map_url += f"|{path[-1].lat},{path[-1].lng}"
-        
+    if path:        
         path = only_in_map(path, center, zoom)      # 구불구불한 경로의 경우 이상해질수 있으니 하지 않는게 좋겠지만 일단 이대로
         path = zoom_path(path, zoom)
 
@@ -196,7 +192,11 @@ def get_path(key, origin, destination):
     url += "&option=trafast"    # 빠른길
 
     data = requests.get(url, headers=headers).json()
-    path = data["route"]["trafast"][0]["path"]
-    path = [GeoCoord(p[1], p[0]) for p in path]
+
+    try:
+        path = data["route"]["trafast"][0]["path"]
+        path = [GeoCoord(p[1], p[0]) for p in path]
+    except:
+        path = [origin, destination]
     
     return path

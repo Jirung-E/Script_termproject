@@ -556,57 +556,60 @@ class ShareWindow:
 
         bold_font = ("맑은 고딕", 24, "bold")
 
-        Label(self.share_window, text="From:", font=bold_font
+        self.email_frame = Frame(self.share_window, width=600, height=450)
+        self.email_frame.pack()
+
+        Label(self.email_frame, text="From:", font=bold_font
               ).place(x=10, y=10, height=50)
 
         y = 70
-        Label(self.share_window, text="email", font=default_font
+        Label(self.email_frame, text="email", font=default_font
               ).place(x=10, y=y, height=50)
         self.from_mail_address = StringVar()
-        Entry(self.share_window, font=default_font, width=30, 
+        Entry(self.email_frame, font=default_font, width=30, 
               textvariable=self.from_mail_address
               ).place(x=140, y=y, width=200, height=50)
-        Label(self.share_window, text="@", font=default_font
+        Label(self.email_frame, text="@", font=default_font
               ).place(x=340, y=y, width=30, height=50)
         self.from_mails = ["gmail.com", "tukorea.ac.kr"]
         self.from_mail_address_combobox = Combobox(
-            self.share_window, values=self.from_mails,
+            self.email_frame, values=self.from_mails,
             font=default_font, width=30, state="readonly"
         )
         self.from_mail_address_combobox.place(x=370, y=y, width=200, height=50)
         
         y += 60
-        Label(self.share_window, text="password", font=default_font
+        Label(self.email_frame, text="password", font=default_font
               ).place(x=10, y=y, height=50)
         self.from_mail_password = StringVar()
-        Entry(self.share_window, font=default_font, width=30, 
+        Entry(self.email_frame, font=default_font, width=30, 
               textvariable=self.from_mail_password, show="*"
               ).place(x=140, y=y, width=200, height=50)
         caution_font = ("맑은 고딕", 12)
-        Label(self.share_window, text="구글 앱 비밀번호를 입력하세요", 
+        Label(self.email_frame, text="구글 앱 비밀번호를 입력하세요", 
               fg="gray", font=caution_font
               ).place(x=340, y=y, width=250, height=50)
         
         y += 90
-        Label(self.share_window, text="To:", font=bold_font
+        Label(self.email_frame, text="To:", font=bold_font
               ).place(x=10, y=y, height=50)
         
         y += 60
-        Label(self.share_window, text="email", font=default_font
+        Label(self.email_frame, text="email", font=default_font
               ).place(x=10, y=y, height=50)
         self.to_mail_address_1 = StringVar()
-        Entry(self.share_window, font=default_font, width=30, 
+        Entry(self.email_frame, font=default_font, width=30, 
               textvariable=self.to_mail_address_1
               ).place(x=140, y=y, width=200, height=50)
-        Label(self.share_window, text="@", font=default_font
+        Label(self.email_frame, text="@", font=default_font
               ).place(x=340, y=y, width=30, height=50)
         self.to_mail_address_2 = StringVar()
-        Entry(self.share_window, font=default_font, width=30,
+        Entry(self.email_frame, font=default_font, width=30,
               textvariable=self.to_mail_address_2
               ).place(x=370, y=y, width=200, height=50)
 
         y += 90
-        Button(self.share_window, text="전송", font=default_font,
+        Button(self.email_frame, text="전송", font=default_font,
                command=lambda: self.send_email()
                ).place(x=480, y=y, width=90, height=50)
     
@@ -615,7 +618,7 @@ class ShareWindow:
         passwd = self.from_mail_password.get()
         to_addr = self.to_mail_address_1.get() + "@" + self.to_mail_address_2.get()
         title = "전기차 충전소 정보"
-        msgtext = "<h6>" + self.master.map_widgets.address + "</h6>"
+        msgtext = "<h4>" + self.master.map_widgets.address + "</h4>"
         msgtext += "\n\n"
         for charger in self.master.search_widgets.chargers:
             msgtext += "<p>" + charger.name + "(" +charger.addr + ") </p>\n"

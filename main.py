@@ -19,6 +19,7 @@ button_font = ("맑은 고딕", 24)
 default_font = ("맑은 고딕", 20)
 info_font = ("맑은 고딕", 16)
 combobox_font = ("맑은 고딕", 18)
+bold_font = ("맑은 고딕", 24, "bold")
 
 favorites_list = []
 recent_list = []
@@ -553,9 +554,17 @@ class ShareWindow:
         self.share_window.attributes('-topmost', 'true')
         self.share_window.grab_set()
         self.share_window.focus_set()
+        
+        notebook = Notebook(self.share_window)
+        notebook.pack()
 
-        bold_font = ("맑은 고딕", 24, "bold")
+        self.setupEmailPage()
+        self.setupTelegramPage()
 
+        notebook.add(self.email_frame, text="이메일")
+        notebook.add(self.telegram_frame, text="텔레그램")
+    
+    def setupEmailPage(self):
         self.email_frame = Frame(self.share_window, width=600, height=450)
         self.email_frame.pack()
 
@@ -613,6 +622,15 @@ class ShareWindow:
                command=lambda: self.send_email()
                ).place(x=480, y=y, width=90, height=50)
     
+    def setupTelegramPage(self):
+        self.telegram_frame = Frame(self.share_window, width=600, height=450)
+        self.telegram_frame.pack()
+
+        Label(self.telegram_frame, text="텔레그램: ", font=bold_font
+              ).place(x=10, y=10, height=50)
+        
+        # 텔레그램봇 아이디 알려주고 전송버튼
+
     def send_email(self):
         from_addr = self.from_mail_address.get() + "@" + self.from_mail_address_combobox.get()
         passwd = self.from_mail_password.get()

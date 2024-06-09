@@ -549,7 +549,7 @@ class ShareWindow:
         
         self.share_window = Toplevel(self.master.window)
         self.share_window.resizable(0, 0)
-        self.share_window.geometry("600x450")
+        self.share_window.geometry("600x500")
         self.share_window.title('공유')
         self.share_window.attributes('-topmost', 'true')
         self.share_window.grab_set()
@@ -561,11 +561,13 @@ class ShareWindow:
         self.setupEmailPage()
         self.setupTelegramPage()
 
-        notebook.add(self.email_frame, text="이메일")
-        notebook.add(self.telegram_frame, text="텔레그램")
+        self.email_icon = PhotoImage(file="img/gmail_icon.png")
+        self.telegram_icon = PhotoImage(file="img/telegram_icon.png")
+        notebook.add(self.email_frame, image=self.email_icon)
+        notebook.add(self.telegram_frame, image=self.telegram_icon)
     
     def setupEmailPage(self):
-        self.email_frame = Frame(self.share_window, width=600, height=450)
+        self.email_frame = Frame(self.share_window, width=600, height=500)
         self.email_frame.pack()
 
         Label(self.email_frame, text="From:", font=bold_font
@@ -623,7 +625,7 @@ class ShareWindow:
                ).place(x=480, y=y, width=90, height=50)
     
     def setupTelegramPage(self):
-        self.telegram_frame = Frame(self.share_window, width=600, height=450)
+        self.telegram_frame = Frame(self.share_window, width=600, height=500)
         self.telegram_frame.pack()
 
         Label(self.telegram_frame, text="텔레그램: ", font=bold_font

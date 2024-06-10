@@ -5,3 +5,7 @@ temp/
 
 # -- Python --
 __pycache__/
+
+# -- Visual Studio --
+.vs/
+x64/

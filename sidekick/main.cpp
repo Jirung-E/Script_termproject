@@ -8,8 +8,45 @@
 using namespace std;
 
 
+struct GeoCoord {
+    long double lat;
+    long double lon;
+};
+
+
 static PyObject* spam_hello(PyObject* self, PyObject* args) {
     return PyUnicode_FromString("Hello, world!");
+}
+
+
+static PyObject* pass_GeoCoord(PyObject* self, PyObject* args) {
+    PyObject* coord = nullptr;      // python GeoCoord 객체를 받을 변수
+    GeoCoord gc;                    // C++ GeoCoord 객체를 만들 변수
+
+    // 파이썬에서 GeoCoord 객체를 받아온다.
+    if(!PyArg_ParseTuple(args, "O", &coord))
+        return nullptr;
+
+    // 파이썬 객체가 GeoCoord 객체가 맞는지 확인한다.
+    if(!PyObject_HasAttrString(coord, "lat") || !PyObject_HasAttrString(coord, "lng")) {
+        PyErr_SetString(PyExc_TypeError, "parameter must be GeoCoord object.");
+        return nullptr;
+    }
+
+    // 파이썬 객체에서 lat, lon 값을 받아온다.
+    PyObject* lat = PyObject_GetAttrString(coord, "lat");
+    PyObject* lon = PyObject_GetAttrString(coord, "lng");
+
+    // lat, lon 값을 C++ GeoCoord 객체에 넣는다.
+    gc.lat = PyFloat_AsDouble(lat);
+    gc.lon = PyFloat_AsDouble(lon);
+
+    // 파이썬 객체에서 받아온 레퍼런스를 해제한다.
+    Py_DECREF(lat);
+    Py_DECREF(lon);
+
+    // C++ GeoCoord 객체를 출력한다.
+    cout << "lat: " << gc.lat << ", lon: " << gc.lon << endl;
 }
 
 
@@ -51,6 +88,7 @@ static PyObject* spam_sort(PyObject* self, PyObject* args) {
 
 static PyMethodDef SpamMethods[] = {
     { "hello", spam_hello, METH_VARARGS, "say hello" },
+    { "pass_GeoCoord", pass_GeoCoord, METH_VARARGS, "pass GeoCoord" },
     { "sort", spam_sort, METH_VARARGS, "sort list." },
     { NULL, NULL, 0, NULL } // 배열의 끝을 나타냅니다.
 };

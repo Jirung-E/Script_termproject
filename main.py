@@ -9,6 +9,10 @@ from apis import *
 from charger import *
 from placeholder import *
 from gmail import *
+import telegram_bot
+
+
+
 
 
 
@@ -182,22 +186,22 @@ class SearchWidgets:
             self.add_to_favorites_button.configure(image=self.star_empty_img)
 
     def select_charger(self, event):
-        selected_charger_group: ChargerGroup = self.chargers[self.result_listbox.curselection()[0]]
+        self.selected_charger_group: ChargerGroup = self.chargers[self.result_listbox.curselection()[0]]
 
         charger_coords = [chargers.getAverageCoord() for chargers in self.chargers]
         self.master.update_map(
-            selected_charger_group.addr, 
+            self.selected_charger_group.addr, 
             charger_coords,
             self.make_address().strip(),
-            selected_charger_group.addr
+            self.selected_charger_group.addr
         )
         
         self.master.info_widgets.details_listbox.delete(0, END)
 
         self.master.info_widgets.details_listbox.insert(END, 
-            selected_charger_group.addr)
+            self.selected_charger_group.addr)
 
-        for charger in selected_charger_group.chargers:
+        for charger in self.selected_charger_group.chargers:
             self.master.info_widgets.details_listbox.insert(END, "- - - - - - - - - - - -")
 
             self.master.info_widgets.details_listbox.insert(END, 
@@ -486,6 +490,9 @@ class MapWidgets:
     def update_map(self, addr, markers=[], origin=None, destination=None):
         self.address = addr
         self.markers = markers
+        self.origin = origin
+        self.destination = destination
+
         if origin is not None and destination is not None:
             try:
                 self.path = get_path(service_key["naver"], origin, destination)
@@ -542,7 +549,7 @@ class MapWidgets:
 
 
 
-
+# 충전기를 선택해야 보낼 수 있음
 class ShareWindow:
     def __init__(self, master):
         self.master = master
@@ -628,8 +635,24 @@ class ShareWindow:
         self.telegram_frame = Frame(self.share_window, width=600, height=500)
         self.telegram_frame.pack()
 
-        Label(self.telegram_frame, text="텔레그램: ", font=bold_font
+        Label(self.telegram_frame, text="Telegram: ", font=bold_font
               ).place(x=10, y=10, height=50)
+        
+        Label(self.telegram_frame, text="Chatbot ID:    electriccar_charger_finder_bot",
+              font=info_font
+              ).place(x=10, y=75, height=50)
+        
+        Label(self.telegram_frame, text="Your Chat ID", font=default_font
+              ).place(x=10, y=130, height=50)
+        
+        self.telegram_chat_id = StringVar()
+        Entry(self.telegram_frame, font=default_font,
+              textvariable=self.telegram_chat_id
+              ).place(x=180, y=130, width=390, height=50)
+        
+        Button(self.telegram_frame, text="전송", font=default_font,
+               command=lambda: self.send_telegram()
+               ).place(x=480, y=190, width=90, height=50)
         
         # 텔레그램봇 아이디 알려주고 전송버튼
 
@@ -638,16 +661,83 @@ class ShareWindow:
         passwd = self.from_mail_password.get()
         to_addr = self.to_mail_address_1.get() + "@" + self.to_mail_address_2.get()
         title = "전기차 충전소 정보"
-        msgtext = "<h4>" + self.master.map_widgets.address + "</h4>"
+        msgtext = "<h2><u>전기차 충전소 정보</u></h2>\n"
+        msgtext += "<h4>" + self.master.map_widgets.origin + "</h4>\n"
+        msgtext += self.master.map_widgets.address
+
         msgtext += "\n\n"
-        for charger in self.master.search_widgets.chargers:
-            msgtext += "<p>" + charger.name + "(" +charger.addr + ") </p>\n"
+
+        for charger in self.master.search_widgets.selected_charger_group.chargers:
+            msgtext += "<hr/>\n"
+            msgtext += "<b>" + charger.name + "</b>"
+            msgtext += "\n"
+            msgtext += "상태: " + charger.getState()
+            msgtext += "\n"
+            msgtext += "충전기 타입: " + charger.getType()
+            msgtext += "\n"
+            msgtext += "출력: " + charger.getOutput()
+            msgtext += "\n"
+            msgtext += "충전방식: " + charger.method
+            msgtext += "\n"
+            msgtext += "주차: " + charger.getParking()
+            msgtext += "\n"
+            
+            limit = charger.getLimit()
+            msgtext += "제한사항: " + (limit if limit != "무제한" else "없음")
+            msgtext += "\n"
+            
+            if charger.note != "":
+                msgtext += "비고: " + charger.note
+                msgtext += "\n"
+
         msgtext += "\n"
+
         msgtext += "<img src='cid:image1'>"
+
         img = self.master.map_widgets.map_img
         byte_buffer = BytesIO()
         img.save(byte_buffer, "PNG")
+
         sendMain(from_addr, passwd, to_addr, title, msgtext, byte_buffer.getvalue())
+
+        self.share_window.destroy()
+
+    def send_telegram(self):
+        chat_id = self.telegram_chat_id.get()
+        msgtext = "<b><u>전기차 충전소 정보</u></b>\n"
+        msgtext += "<b>" + self.master.map_widgets.origin + "</b>"
+        
+        msgtext += "\n"
+
+        msgtext += self.master.map_widgets.address
+
+        telegram_bot.send_message(chat_id, msgtext)
+
+        for charger in self.master.search_widgets.selected_charger_group.chargers:
+            msgtext = "<b>" + charger.name + "</b>"
+            msgtext += "\n"
+            msgtext += "상태: " + charger.getState()
+            msgtext += "\n"
+            msgtext += "충전기 타입: " + charger.getType()
+            msgtext += "\n"
+            msgtext += "출력: " + charger.getOutput()
+            msgtext += "\n"
+            msgtext += "충전방식: " + charger.method
+            msgtext += "\n"
+            msgtext += "주차: " + charger.getParking()
+            msgtext += "\n"
+            
+            limit = charger.getLimit()
+            msgtext += "제한사항: " + (limit if limit != "무제한" else "없음")
+            msgtext += "\n"
+            
+            if charger.note != "":
+                msgtext += "비고: " + charger.note
+                msgtext += "\n"
+        
+            telegram_bot.send_message(chat_id, msgtext)
+
+        telegram_bot.send_image(chat_id, open("temp/map.png", "rb"))
 
         self.share_window.destroy()
 

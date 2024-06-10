@@ -1,5 +1,7 @@
 service_key.json
 google_app_pass.txt
+telegram_bot_id.txt
+temp/
 
 # -- Python --
 __pycache__/

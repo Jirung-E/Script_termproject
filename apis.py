@@ -167,6 +167,9 @@ def get_googlemap(key, center: GeoCoord, size: str, zoom=13, markers: List[GeoCo
     dataBytesIO.seek(0)
     image = Image.open(dataBytesIO).resize(map(int, size.split('x')))
 
+    with open("temp/map.png", "wb") as file:
+        image.save(file, "PNG")
+
     return image
 
 

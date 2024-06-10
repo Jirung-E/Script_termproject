@@ -653,8 +653,6 @@ class ShareWindow:
         Button(self.telegram_frame, text="전송", font=default_font,
                command=lambda: self.send_telegram()
                ).place(x=480, y=190, width=90, height=50)
-        
-        # 텔레그램봇 아이디 알려주고 전송버튼
 
     def send_email(self):
         from_addr = self.from_mail_address.get() + "@" + self.from_mail_address_combobox.get()

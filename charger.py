@@ -81,7 +81,7 @@ class Charger:
 
 
 class ChargerGroup:
-    def __init__(self, addr, chargers: List[Charger] = []):
+    def __init__(self, addr):
         self.addr: str = addr
         self.names = set()
         self.chargers: List[Charger] = []

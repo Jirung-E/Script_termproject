@@ -46,7 +46,7 @@ static PyObject* furthest_marker(PyObject* self, PyObject* args) {
     PyObject* coord = nullptr;
     PyObject* markers = nullptr;
 
-    if(!PyArg_ParseTuple(args, "OO", &coord, &markers))
+    if(!PyArg_ParseTuple(args, "OO", &markers, &coord))
         return nullptr;
 
     PyObject* lat = PyObject_GetAttrString(coord, "lat");
@@ -57,7 +57,7 @@ static PyObject* furthest_marker(PyObject* self, PyObject* args) {
     Py_DECREF(lat);
     Py_DECREF(lon);
 
-    double max_distance2 = 0.0f;
+    double max_distance2 = -1.0f;
     PyObject* max_marker = nullptr;
     long max_index = -1;
 
@@ -81,6 +81,9 @@ static PyObject* furthest_marker(PyObject* self, PyObject* args) {
         }
     }
 
+    if(max_marker == nullptr) {
+        Py_RETURN_NONE;
+    }
     PyObject* idx = PyLong_FromLong(max_index);
     PyObject* result = PyTuple_Pack(2, idx, max_marker);
     //Py_INCREF(max_marker);

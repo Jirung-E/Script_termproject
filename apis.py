@@ -78,7 +78,7 @@ def distance2_between(coord1: GeoCoord, coord2: GeoCoord) -> float:
 
 
 def furthest_marker(markers: List[GeoCoord], center: GeoCoord) -> tuple[int, GeoCoord]:
-    return sidekick.furthest_marker(center, markers)
+    return sidekick.furthest_marker(markers, center)
 
 
 def grouped_markers(markers: List[GeoCoord], zoom: int) -> List[GeoCoord]:

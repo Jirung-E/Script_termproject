@@ -142,11 +142,11 @@ class SearchWidgets:
         code = None
         address = addr.split(" ")
         while code is None and len(address) > 0:
-            code = get_region_code(service_key["encoding"], str(' '.join(address)))
+            code = get_region_code(str(' '.join(address)))
             address.pop()
 
         if code is not None:
-            self.chargers: List[ChargerGroup] = get_chargers_in_region(service_key["decoding"], code)
+            self.chargers: List[ChargerGroup] = get_chargers_in_region(code)
 
             if addr in recent_list:
                 recent_list.remove(addr)
@@ -480,7 +480,7 @@ class MapWidgets:
         center = gmaps.geocode(self.address)[0]['geometry']['location']
         center = GeoCoord(center['lat'], center['lng'])
 
-        self.map_img = get_googlemap(service_key["google"], center, self.size)
+        self.map_img = get_googlemap(center, self.size)
         self.map_tkimg = ImageTk.PhotoImage(self.map_img)
         self.map = Label(self.frame, image=self.map_tkimg)
 
@@ -495,7 +495,7 @@ class MapWidgets:
 
         if origin is not None and destination is not None:
             try:
-                self.path = get_path(service_key["naver"], origin, destination)
+                self.path = get_path(origin, destination)
             except:
                 self.path = []
                 print("경로를 찾을 수 없습니다.")
@@ -517,7 +517,7 @@ class MapWidgets:
             center = gmaps.geocode(self.address)[0]['geometry']['location']
             center = GeoCoord(center['lat'], center['lng'])
             
-        self.map_img = get_googlemap(service_key["google"], center, self.size, self.zoom, self.markers, self.path)
+        self.map_img = get_googlemap(center, self.size, self.zoom, self.markers, self.path)
         self.map_tkimg = ImageTk.PhotoImage(self.map_img)
         self.map.configure(image=self.map_tkimg)
 
@@ -886,9 +886,6 @@ class GUI:
 
 
 if __name__ == "__main__":
-    with open('service_key.json', 'r') as f:
-        service_key = json.load(f)
-
     with open("recent.txt", "r", encoding="utf-8") as f:
         recent_list = [s for s in f.read().split("\n") if s != ""]
 

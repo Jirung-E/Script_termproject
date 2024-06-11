@@ -1,5 +1,6 @@
 import requests
 import io
+import json
 from PIL import Image
 from googlemaps import Client
 from typing import List, Dict
@@ -8,9 +9,20 @@ from charger import *
 import sidekick
 
 
-def get_region_code(key, addr: str):
+
+
+
+with open('service_key.json', 'r') as f:
+    service_key = json.load(f)
+
+
+
+
+
+
+def get_region_code(addr: str):
     url = "http://apis.data.go.kr/1741000/StanReginCd/getStanReginCdList"
-    url += "?serviceKey=" + key
+    url += "?serviceKey=" + service_key["encoding"]
     url += "&type=json"
     url += "&locatadd_nm=" + addr
 
@@ -25,10 +37,10 @@ def get_region_code(key, addr: str):
     return code
 
 
-def get_chargers_in_region(key, region_code, page=1) -> List[ChargerGroup]:
+def get_chargers_in_region(region_code, page=1) -> List[ChargerGroup]:
     url = "http://apis.data.go.kr/B552584/EvCharger/getChargerInfo"
     queryParams = {
-        "serviceKey": key,
+        "serviceKey": service_key["decoding"],
         "numOfRows": 9999,
         "pageNo": page,
         "zscode": region_code,
@@ -120,9 +132,9 @@ def zoom_path(path: List[GeoCoord], zoom: int) -> List[GeoCoord]:
     return zoomed_path
 
 
-def get_googlemap(key, center: GeoCoord, size: str, zoom=13, markers: List[GeoCoord]=[], path: List[GeoCoord]=[]):
+def get_googlemap(center: GeoCoord, size: str, zoom=13, markers: List[GeoCoord]=[], path: List[GeoCoord]=[]):
     map_url = "https://maps.googleapis.com/maps/api/staticmap"
-    map_url += "?key=" + key
+    map_url += "?key=" + service_key["google"]
     map_url += f"&center={center.lat},{center.lng}"
     map_url += "&zoom=" + str(zoom)
     map_url += "&size=1440x1440"
@@ -164,7 +176,8 @@ def get_googlemap(key, center: GeoCoord, size: str, zoom=13, markers: List[GeoCo
     return image
 
 
-def get_path(key, origin, destination):
+def get_path(origin, destination):
+    key = service_key["naver"]
     headers = {
         "X-NCP-APIGW-API-KEY-ID": key["client_id"],
         "X-NCP-APIGW-API-KEY": key["client_secret"],

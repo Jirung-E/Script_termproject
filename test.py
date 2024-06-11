@@ -1,6 +1,6 @@
 import sidekick
 from charger import GeoCoord
-from apis import distance2_between, furthest_marker, zoom_path
+from apis import distance2_between, furthest_marker, zoom_path, only_in_map
 
 import random
 from time import time
@@ -34,6 +34,7 @@ def test3():
     end = time()
     print(end - start)         # 이게 더 빠르네........  
 
+    assert len(sorted_list1) == len(sorted_list2)
     for i in range(len(sorted_list1)):
         assert sorted_list1[i].lat == sorted_list2[i].lat
         assert sorted_list1[i].lng == sorted_list2[i].lng
@@ -52,32 +53,64 @@ def test4():
     end = time()
     print(end - start)
 
+    assert len(zoomed_path1) == len(zoomed_path2)
     for i in range(len(zoomed_path1)):
         assert zoomed_path1[i].lat == zoomed_path2[i].lat
         assert zoomed_path1[i].lng == zoomed_path2[i].lng
 
 
+def test5():
+    zoom = 13
 
-test2()
-test2()
-test2()
-test2()
-test2()
+    start = time()
+    in_map1 = sidekick.only_in_map(coord_list, GeoCoord(37.5, 127.5), 0.055 * (2 ** (13 - zoom)))
+    end = time()
+    print(end - start)
 
-print()
-print()
+    start = time()
+    in_map2 = only_in_map(coord_list, GeoCoord(37.5, 127.5), zoom)
+    end = time()
+    print(end - start)
 
-test3()
-test3()
-test3()
-test3()
+    print(len(in_map1), len(in_map2))
+    assert len(in_map1) == len(in_map2)
+    for i in range(len(in_map1)):
+        assert in_map1[i].lat == in_map2[i].lat
+        assert in_map1[i].lng == in_map2[i].lng
 
-print()
 
-test4()
-test4()
-test4()
-test4()
-test4()
+
+
+
+# test2()
+# test2()
+# test2()
+# test2()
+# test2()
+
+# print()
+# print()
+
+# test3()
+# test3()
+# test3()
+# test3()
+
+# print()
+
+# test4()
+# test4()
+# test4()
+# test4()
+# test4()
+
+# print()
+
+test5()
+test5()
+test5()
+test5()
+test5()
+test5()
 
 print("Done!")

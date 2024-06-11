@@ -272,16 +272,50 @@ static PyObject* zoom_path(PyObject* self, PyObject* args) {    // (list[GeoCoor
 }
 
 
-//static PyObject* only_in_map(PyObject* self, PyObject* args) {    // (list[GeoCoord], distance: double) -> list[GeoCoord]
-//
-//}
+static PyObject* only_in_map(PyObject* self, PyObject* args) {    // (list[GeoCoord], center: GeoCoord, distance: double) -> list[GeoCoord]
+    PyObject* markers = nullptr;
+    PyObject* center = nullptr;
+    double distance = 0.0;
+
+    if(!PyArg_ParseTuple(args, "OOd", &markers, &center, &distance))
+        return nullptr;
+
+    PyObject* lat = PyObject_GetAttrString(center, "lat");
+    PyObject* lon = PyObject_GetAttrString(center, "lng");
+
+    GeoCoord center_gc { PyFloat_AsDouble(lat), PyFloat_AsDouble(lon) };
+
+    Py_DECREF(lat);
+    Py_DECREF(lon);
+
+    PyObject* result = PyList_New(0);
+
+    for(Py_ssize_t i = 0; i < PyList_Size(markers); i++) {
+        PyObject* marker = PyList_GetItem(markers, i);
+
+        PyObject* lat = PyObject_GetAttrString(marker, "lat");
+        PyObject* lon = PyObject_GetAttrString(marker, "lng");
+
+        GeoCoord marker_gc { PyFloat_AsDouble(lat), PyFloat_AsDouble(lon) };
+
+        Py_DECREF(lat);
+        Py_DECREF(lon);
+
+        if(abs(center_gc.lat - marker_gc.lat) < distance && abs(center_gc.lon - marker_gc.lon) < distance) {
+            PyList_Append(result, marker);
+            Py_INCREF(marker);
+        }
+    }
+
+    return result;
+}
 
 
 static PyMethodDef SpamMethods[] = {
-    { "furthest_marker", furthest_marker, METH_VARARGS, "find furthest marker" },
-    { "zoom_path", zoom_path, METH_VARARGS, "zoom path" },
-    { "sort_by_distance", sort_by_distance, METH_VARARGS, "sort list." },
-    //{ "only_in_map", only_in_map, METH_VARARGS, "filter markers." },
+    { "furthest_marker", furthest_marker, METH_VARARGS, "find furthest marker. 얘는 빠르다." },
+    { "zoom_path", zoom_path, METH_VARARGS, "zoom path. 근데 더 느리다.." },
+    { "sort_by_distance", sort_by_distance, METH_VARARGS, "sort list. 얘도 더 느리다.." },
+    { "only_in_map", only_in_map, METH_VARARGS, "filter markers. 얘는 별 차이가 없다..." },
     { NULL, NULL, 0, NULL } // 배열의 끝을 나타냅니다.
 };
 

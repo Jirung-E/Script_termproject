@@ -264,10 +264,10 @@ class FavoritesWidgets:
         self.master.search_widgets.search_input.delete(0, END)
         self.master.search_widgets.search_input.foc_in(None)
         self.master.search_widgets.search_input.insert(0, self.listbox.get(self.listbox.curselection()))
-        self.master.search_widgets.update_favorites(None)
-        self.master.search_widgets.search(self.listbox.get(self.listbox.curselection()))
         self.master.search_widgets.dosi_combobox.set('')
         self.master.search_widgets.sigungu_combobox.set('')
+        self.master.search_widgets.update_favorites(None)
+        self.master.search_widgets.search(self.listbox.get(self.listbox.curselection()))
 
 
 
@@ -312,10 +312,10 @@ class RecentWidgets:
         self.master.search_widgets.search_input.delete(0, END)
         self.master.search_widgets.search_input.foc_in(None)
         self.master.search_widgets.search_input.insert(0, self.listbox.get(self.listbox.curselection()))
-        self.master.search_widgets.update_favorites(None)
-        self.master.search_widgets.search(self.listbox.get(self.listbox.curselection()))
         self.master.search_widgets.dosi_combobox.set('')
         self.master.search_widgets.sigungu_combobox.set('')
+        self.master.search_widgets.update_favorites(None)
+        self.master.search_widgets.search(self.listbox.get(self.listbox.curselection()))
 
 
 

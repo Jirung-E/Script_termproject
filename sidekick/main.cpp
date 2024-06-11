@@ -91,6 +91,8 @@ static PyObject* furthest_marker(PyObject* self, PyObject* args) {
         if(distance2 > max_distance2) {
             max_distance2 = distance2;
             max_marker = marker;
+            
+            Py_INCREF(marker);
         }
     }
 
@@ -204,9 +206,82 @@ static PyObject* sort_by_distance(PyObject* self, PyObject* args) {     // (list
 }
 
 
+static PyObject* zoom_path(PyObject* self, PyObject* args) {    // (list[GeoCoord], distance: double) -> list[GeoCoord]
+    PyObject* path = NULL;
+    double distance = 0.0f;
+
+    if(!PyArg_ParseTuple(args, "Od", &path, &distance))
+        return NULL;
+
+    //if(!PyList_Check(path)) {
+    //    PyErr_SetString(PyExc_TypeError, "parameter must be list.");
+    //    return NULL;
+    //}
+
+    double distance2 = distance * distance;
+
+    vector<GeoCoord> zoomed_path;
+    zoomed_path.reserve(PyList_Size(path));
+
+    PyObject* start = PyList_GetItem(path, 0);
+    PyObject* lat = PyObject_GetAttrString(start, "lat");
+    PyObject* lon = PyObject_GetAttrString(start, "lng");
+    GeoCoord pivot { PyFloat_AsDouble(lat), PyFloat_AsDouble(lon) };
+    Py_DECREF(lat);
+    Py_DECREF(lon);
+    zoomed_path.push_back(pivot);
+
+    for(Py_ssize_t i = 1; i < PyList_Size(path); i++) {
+        PyObject* marker = PyList_GetItem(path, i);
+
+        //if(!PyObject_HasAttrString(marker, "lat") || !PyObject_HasAttrString(marker, "lng")) {
+        //    PyErr_SetString(PyExc_TypeError, "parameter must be GeoCoord object.");
+        //    return nullptr;
+        //}
+
+        PyObject* lat = PyObject_GetAttrString(marker, "lat");
+        PyObject* lon = PyObject_GetAttrString(marker, "lng");
+
+        GeoCoord marker_gc { PyFloat_AsDouble(lat), PyFloat_AsDouble(lon) };
+
+        Py_DECREF(lat);
+        Py_DECREF(lon);
+
+        if(pivot.distance2(marker_gc) >= distance2) {
+            pivot = marker_gc;
+            zoomed_path.push_back(pivot);
+        }
+    }
+
+    PyObject* last = PyList_GetItem(path, PyList_Size(path) - 1);
+    lat = PyObject_GetAttrString(last, "lat");
+    lon = PyObject_GetAttrString(last, "lng");
+    GeoCoord last_gc { PyFloat_AsDouble(lat), PyFloat_AsDouble(lon) };
+    Py_DECREF(lat);
+    Py_DECREF(lon);
+    zoomed_path.push_back(last_gc);
+
+    PyObject* result = PyList_New(zoomed_path.size());    // list[GeoCoord]
+
+    for(size_t i = 0; i < zoomed_path.size(); i++) {
+        PyObject* marker = PyObject_CallFunction(PyObject_GetAttrString(PyImport_ImportModule("charger"), "GeoCoord"), "dd", zoomed_path[i].lat, zoomed_path[i].lon);
+        PyList_SetItem(result, i, marker);
+    }
+
+    return result;
+}
+
+
+//static PyObject* only_in_map(PyObject* self, PyObject* args) {    // (list[GeoCoord], distance: double) -> list[GeoCoord]
+//
+//}
+
+
 static PyMethodDef SpamMethods[] = {
     { "furthest_marker", furthest_marker, METH_VARARGS, "find furthest marker" },
+    { "zoom_path", zoom_path, METH_VARARGS, "zoom path" },
     { "sort_by_distance", sort_by_distance, METH_VARARGS, "sort list." },
+    //{ "only_in_map", only_in_map, METH_VARARGS, "filter markers." },
     { NULL, NULL, 0, NULL } // 배열의 끝을 나타냅니다.
 };
 

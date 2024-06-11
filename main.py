@@ -735,7 +735,7 @@ class ShareWindow:
         
             telegram_bot.send_message(chat_id, msgtext)
 
-        telegram_bot.send_image(chat_id, open("temp/map.png", "rb"))
+        telegram_bot.send_image(chat_id, "temp/map.png")
 
         self.share_window.destroy()
 

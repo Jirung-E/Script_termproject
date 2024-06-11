@@ -1,6 +1,7 @@
 service_key.json
 google_app_pass.txt
 telegram_bot_id.txt
+telegram_chat_id.txt
 temp/
 
 # -- Python --

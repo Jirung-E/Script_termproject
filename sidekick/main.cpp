@@ -4,6 +4,7 @@
 #include <iostream>
 #include <algorithm>
 #include <vector>
+#include <deque>
 
 using namespace std;
 
@@ -20,6 +21,16 @@ public:
     GeoCoord() : lat { 0.0f }, lon { 0.0f } {
 
     }
+    GeoCoord(const GeoCoord& other) : lat { other.lat }, lon { other.lon } {
+
+    }
+
+    GeoCoord& operator=(const GeoCoord& other) {
+        lat = other.lat;
+        lon = other.lon;
+
+        return *this;
+    }
 
 public:
     double distance2(const GeoCoord& other) const {
@@ -29,72 +40,6 @@ public:
         return lat_diff * lat_diff + lon_diff * lon_diff;
     }
 };
-
-
-static PyObject* spam_hello(PyObject* self, PyObject* args) {
-    return PyUnicode_FromString("Hello, world!");
-}
-
-
-static PyObject* pass_GeoCoord(PyObject* self, PyObject* args) {
-    PyObject* coord = nullptr;      // python GeoCoord 객체를 받을 변수
-    GeoCoord gc;                    // C++ GeoCoord 객체를 만들 변수
-
-    // 파이썬에서 GeoCoord 객체를 받아온다.
-    if(!PyArg_ParseTuple(args, "O", &coord))
-        return nullptr;
-
-    // 파이썬 객체가 GeoCoord 객체가 맞는지 확인한다.
-    if(!PyObject_HasAttrString(coord, "lat") || !PyObject_HasAttrString(coord, "lng")) {
-        PyErr_SetString(PyExc_TypeError, "parameter must be GeoCoord object.");
-        return nullptr;
-    }
-
-    // 파이썬 객체에서 lat, lon 값을 받아온다.
-    PyObject* lat = PyObject_GetAttrString(coord, "lat");
-    PyObject* lon = PyObject_GetAttrString(coord, "lng");
-
-    // lat, lon 값을 C++ GeoCoord 객체에 넣는다.
-    gc.lat = PyFloat_AsDouble(lat);
-    gc.lon = PyFloat_AsDouble(lon);
-
-    // 파이썬 객체에서 받아온 레퍼런스를 해제한다.
-    Py_DECREF(lat);
-    Py_DECREF(lon);
-
-    // C++ GeoCoord 객체를 출력한다.
-    cout << "lat: " << gc.lat << ", lon: " << gc.lon << endl;
-}
-
-
-static PyObject* distance2_between(PyObject* self, PyObject* args) {
-    PyObject* coord1 = nullptr;
-    PyObject* coord2 = nullptr;
-
-    if(!PyArg_ParseTuple(args, "OO", &coord1, &coord2))
-        return nullptr;
-
-    //if(!PyObject_HasAttrString(coord1, "lat") || !PyObject_HasAttrString(coord1, "lng") ||
-    //   !PyObject_HasAttrString(coord2, "lat") || !PyObject_HasAttrString(coord2, "lng")) {
-    //    PyErr_SetString(PyExc_TypeError, "parameter must be GeoCoord object.");
-    //    return nullptr;
-    //}
-
-    PyObject* lat1 = PyObject_GetAttrString(coord1, "lat");
-    PyObject* lon1 = PyObject_GetAttrString(coord1, "lng");
-    PyObject* lat2 = PyObject_GetAttrString(coord2, "lat");
-    PyObject* lon2 = PyObject_GetAttrString(coord2, "lng");
-
-    GeoCoord gc1 { PyFloat_AsDouble(lat1), PyFloat_AsDouble(lon1) };
-    GeoCoord gc2 { PyFloat_AsDouble(lat2), PyFloat_AsDouble(lon2) };
-
-    Py_DECREF(lat1);
-    Py_DECREF(lon1);
-    Py_DECREF(lat2);
-    Py_DECREF(lon2);
-
-    return PyFloat_FromDouble(gc1.distance2(gc2));
-}
 
 
 static PyObject* furthest_marker(PyObject* self, PyObject* args) {
@@ -153,55 +98,122 @@ static PyObject* furthest_marker(PyObject* self, PyObject* args) {
 }
 
 
-static PyObject* spam_sort(PyObject* self, PyObject* args) {
-    PyObject* list = NULL;
+GeoCoord furthest_marker(const GeoCoord& coord, const vector<GeoCoord>& markers) {
+    double max_distance2 = 0.0f;
+    GeoCoord max_marker;
 
-    if(!PyArg_ParseTuple(args, "O", &list))
-        return NULL;
+    for(const GeoCoord& marker : markers) {
+        double distance2 = coord.distance2(marker);
 
-    if(!PyList_Check(list)) {
-        PyErr_SetString(PyExc_TypeError, "parameter must be list.");
-        return NULL;
+        if(distance2 > max_distance2) {
+            max_distance2 = distance2;
+            max_marker = marker;
+        }
     }
 
-    vector<int> v;
+    return max_marker;
+}
+
+
+//static PyObject* grouped_markers(PyObject* self, PyObject* args) {
+//    PyObject* markers = nullptr;
+//    double radius = 0.0f;
+//
+//    if(!PyArg_ParseTuple(args, "Od", &markers, &radius))
+//        return nullptr;
+//
+//    //if(!PyList_Check(markers)) {
+//    //    PyErr_SetString(PyExc_TypeError, "parameter must be list.");
+//    //    return nullptr;
+//    //}
+//
+//    double radius2 = radius * radius;
+//
+//    Py_ssize_t size = PyList_Size(markers);
+//    vector<GeoCoord> groups;
+//    groups.reserve(size);
+//    
+//    PyObject* first = PyList_GetItem(markers, 0);
+//    PyObject* lat = PyObject_GetAttrString(first, "lat");
+//    PyObject* lon = PyObject_GetAttrString(first, "lng");
+//    GeoCoord pivot { PyFloat_AsDouble(lat), PyFloat_AsDouble(lon) };
+//
+//    Py_DECREF(lat);
+//    Py_DECREF(lon);
+//}
+
+
+static PyObject* sort_by_distance(PyObject* self, PyObject* args) {     // (list[GeoCoord], GeoCoord) -> list[GeoCoord]
+    PyObject* list = NULL;
+    PyObject* center = NULL;
+
+    if(!PyArg_ParseTuple(args, "OO", &list, &center))
+        return NULL;
+
+    //if(!PyObject_HasAttrString(center, "lat") || !PyObject_HasAttrString(center, "lng")) {
+    //    PyErr_SetString(PyExc_TypeError, "parameter must be GeoCoord object.");
+    //    return NULL;
+    //}
+
+    PyObject* lat = PyObject_GetAttrString(center, "lat");
+    PyObject* lon = PyObject_GetAttrString(center, "lng");
+
+    GeoCoord center_gc { PyFloat_AsDouble(lat), PyFloat_AsDouble(lon) };
+
+    Py_DECREF(lat);
+    Py_DECREF(lon);
+
+    //if(!PyList_Check(list)) {
+    //    PyErr_SetString(PyExc_TypeError, "parameter must be list.");
+    //    return NULL;
+    //}
+
+    vector<GeoCoord> v;
+    v.reserve(PyList_Size(list));
 
     for(Py_ssize_t i = 0; i < PyList_Size(list); i++) {
-        PyObject* item = PyList_GetItem(list, i);
-        if(!PyLong_Check(item)) {
-            PyErr_SetString(PyExc_TypeError, "list must be integer list.");
-            return NULL;
-        }
+        PyObject* marker = PyList_GetItem(list, i);
 
-        v.push_back(PyLong_AsLong(item));
+        //if(!PyObject_HasAttrString(marker, "lat") || !PyObject_HasAttrString(marker, "lng")) {
+        //    PyErr_SetString(PyExc_TypeError, "parameter must be GeoCoord object.");
+        //    return nullptr;
+        //}
+
+        PyObject* lat = PyObject_GetAttrString(marker, "lat");
+        PyObject* lon = PyObject_GetAttrString(marker, "lng");
+
+        GeoCoord marker_gc { PyFloat_AsDouble(lat), PyFloat_AsDouble(lon) };
+
+        Py_DECREF(lat);
+        Py_DECREF(lon);
+
+        v.push_back(marker_gc);
     }
 
-    sort(v.begin(), v.end());
+    sort(v.begin(), v.end(), [&](const GeoCoord& a, const GeoCoord& b) {
+        return a.distance2(center_gc) < b.distance2(center_gc);
+    });
 
-    PyObject* ret = PyList_New(v.size());
-
-    for(Py_ssize_t i = 0; i < v.size(); i++) {
-        PyObject* item = PyLong_FromLong(v[i]);
-        PyList_SetItem(ret, i, item);
+    PyObject* result = PyList_New(v.size());    // list[GeoCoord]
+    for(size_t i = 0; i < v.size(); i++) {
+        PyObject* marker = PyObject_CallFunction(PyObject_GetAttrString(PyImport_ImportModule("charger"), "GeoCoord"), "dd", v[i].lat, v[i].lon);
+        PyList_SetItem(result, i, marker);
     }
 
-    return ret;
+    return result;
 }
 
 
 static PyMethodDef SpamMethods[] = {
-    { "hello", spam_hello, METH_VARARGS, "say hello" },
-    { "pass_GeoCoord", pass_GeoCoord, METH_VARARGS, "pass GeoCoord" },
-    { "distance2_between", distance2_between, METH_VARARGS, "distance2 between two GeoCoord" },
     { "furthest_marker", furthest_marker, METH_VARARGS, "find furthest marker" },
-    { "sort", spam_sort, METH_VARARGS, "sort list." },
+    { "sort_by_distance", sort_by_distance, METH_VARARGS, "sort list." },
     { NULL, NULL, 0, NULL } // 배열의 끝을 나타냅니다.
 };
 
 static struct PyModuleDef spammodule = {
     PyModuleDef_HEAD_INIT,
-    "sidekick",            // 모듈 이름
-    "- hello\n- sort", // 모듈 설명을 적는 부분, 모듈의 __doc__에 저장됩니다.
+    "sidekick",
+    "- furthest_marker\n- zoom_path\n- only_in_map\n- sort_by_distance\n",
     -1,
     SpamMethods
 };

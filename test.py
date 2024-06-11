@@ -6,13 +6,7 @@ import random
 from time import time
 
 
-print(sidekick.hello())
-
-sidekick.pass_GeoCoord(GeoCoord(37.123, 127.123))
-
-
-
-coord_list = [GeoCoord(random.uniform(37.0, 38.0), random.uniform(127.0, 128.0)) for _ in range(1000000)]
+coord_list = [GeoCoord(random.uniform(37.0, 38.0), random.uniform(127.0, 128.0)) for _ in range(1_000_000)]
 
 
 def test1():
@@ -58,4 +52,15 @@ def test2():
     print(end - start)
 
 
-test2()
+def test3():
+    start = time()
+    sorted_list = sidekick.sort_by_distance(coord_list, GeoCoord(37.5, 127.5))
+    end = time()
+    print(end - start)
+    
+    for coord in sorted_list[:10]:
+        print(coord.lat, coord.lng)
+
+
+
+test3()

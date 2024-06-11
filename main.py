@@ -10,6 +10,7 @@ from charger import *
 from placeholder import *
 from gmail import *
 import telegram_bot
+import sidekick
 
 
 

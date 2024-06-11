@@ -66,21 +66,7 @@ def distance2_between(coord1: GeoCoord, coord2: GeoCoord) -> float:
 
 
 def furthest_marker(markers: List[GeoCoord], center: GeoCoord) -> tuple[int, GeoCoord]:
-    try:
-        return sidekick.furthest_marker(markers, center)
-    except:
-        print("furthest_marker - Using backup method")
-        far = markers[0]
-        index = 0
-        max_distance = distance2_between(far, center)
-        for i, marker in enumerate(markers):
-            distance = distance2_between(marker, center)
-            if distance > max_distance:
-                far = marker
-                index = i
-                max_distance = distance
-
-        return index, far
+    return sidekick.furthest_marker(center, markers)
 
 
 def grouped_markers(markers: List[GeoCoord], zoom: int) -> List[GeoCoord]:
@@ -113,11 +99,7 @@ def grouped_markers(markers: List[GeoCoord], zoom: int) -> List[GeoCoord]:
 
 def only_in_map(coords: List[GeoCoord], center: GeoCoord, zoom: int) -> List[GeoCoord]:
     limit = 0.055 * (2 ** (13 - zoom))
-    try:
-        return sidekick.only_in_map(coords, center, limit)
-    except:
-        print("only_in_map - Using backup method")
-        return [*filter(lambda coord: abs(coord.lat - center.lat) < limit and abs(coord.lng - center.lng) < limit, coords)]
+    return sidekick.only_in_map(coords, center, limit)
 
 
 def zoom_path(path: List[GeoCoord], zoom: int) -> List[GeoCoord]:

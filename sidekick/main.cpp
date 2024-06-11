@@ -42,22 +42,37 @@ public:
 };
 
 
+static PyObject* distance2_between(PyObject* self, PyObject* args) {
+    PyObject* coord1 = nullptr;
+    PyObject* coord2 = nullptr;
+
+    if(!PyArg_ParseTuple(args, "OO", &coord1, &coord2))
+        return nullptr;
+
+    PyObject* lat1 = PyObject_GetAttrString(coord1, "lat");
+    PyObject* lon1 = PyObject_GetAttrString(coord1, "lng");
+
+    PyObject* lat2 = PyObject_GetAttrString(coord2, "lat");
+    PyObject* lon2 = PyObject_GetAttrString(coord2, "lng");
+
+    GeoCoord gc1 { PyFloat_AsDouble(lat1), PyFloat_AsDouble(lon1) };
+    GeoCoord gc2 { PyFloat_AsDouble(lat2), PyFloat_AsDouble(lon2) };
+
+    Py_DECREF(lat1);
+    Py_DECREF(lon1);
+    Py_DECREF(lat2);
+    Py_DECREF(lon2);
+
+    return PyFloat_FromDouble(gc1.distance2(gc2));
+}
+
+
 static PyObject* furthest_marker(PyObject* self, PyObject* args) {
     PyObject* coord = nullptr;
     PyObject* markers = nullptr;
 
     if(!PyArg_ParseTuple(args, "OO", &coord, &markers))
         return nullptr;
-
-    //if(!PyObject_HasAttrString(coord, "lat") || !PyObject_HasAttrString(coord, "lng")) {
-    //    PyErr_SetString(PyExc_TypeError, "parameter must be GeoCoord object.");
-    //    return nullptr;
-    //}
-
-    //if(!PyList_Check(markers)) {
-    //    PyErr_SetString(PyExc_TypeError, "parameter must be list.");
-    //    return nullptr;
-    //}
 
     PyObject* lat = PyObject_GetAttrString(coord, "lat");
     PyObject* lon = PyObject_GetAttrString(coord, "lng");
@@ -69,14 +84,10 @@ static PyObject* furthest_marker(PyObject* self, PyObject* args) {
 
     double max_distance2 = 0.0f;
     PyObject* max_marker = nullptr;
+    long max_index = -1;
 
     for(Py_ssize_t i = 0; i < PyList_Size(markers); i++) {
         PyObject* marker = PyList_GetItem(markers, i);
-
-        //if(!PyObject_HasAttrString(marker, "lat") || !PyObject_HasAttrString(marker, "lng")) {
-        //    PyErr_SetString(PyExc_TypeError, "parameter must be GeoCoord object.");
-        //    return nullptr;
-        //}
 
         PyObject* lat = PyObject_GetAttrString(marker, "lat");
         PyObject* lon = PyObject_GetAttrString(marker, "lng");
@@ -89,60 +100,24 @@ static PyObject* furthest_marker(PyObject* self, PyObject* args) {
         double distance2 = gc.distance2(marker_gc);
 
         if(distance2 > max_distance2) {
+            if(max_marker != nullptr) {
+                Py_DECREF(max_marker);
+            }
+
             max_distance2 = distance2;
             max_marker = marker;
-            
+            max_index = i;
+
             Py_INCREF(marker);
         }
     }
 
-    return max_marker;
+    PyObject* result = PyTuple_Pack(2, PyLong_FromLong(max_index), max_marker);
+
+    Py_INCREF(max_marker);
+
+    return result;
 }
-
-
-GeoCoord furthest_marker(const GeoCoord& coord, const vector<GeoCoord>& markers) {
-    double max_distance2 = 0.0f;
-    GeoCoord max_marker;
-
-    for(const GeoCoord& marker : markers) {
-        double distance2 = coord.distance2(marker);
-
-        if(distance2 > max_distance2) {
-            max_distance2 = distance2;
-            max_marker = marker;
-        }
-    }
-
-    return max_marker;
-}
-
-
-//static PyObject* grouped_markers(PyObject* self, PyObject* args) {
-//    PyObject* markers = nullptr;
-//    double radius = 0.0f;
-//
-//    if(!PyArg_ParseTuple(args, "Od", &markers, &radius))
-//        return nullptr;
-//
-//    //if(!PyList_Check(markers)) {
-//    //    PyErr_SetString(PyExc_TypeError, "parameter must be list.");
-//    //    return nullptr;
-//    //}
-//
-//    double radius2 = radius * radius;
-//
-//    Py_ssize_t size = PyList_Size(markers);
-//    vector<GeoCoord> groups;
-//    groups.reserve(size);
-//    
-//    PyObject* first = PyList_GetItem(markers, 0);
-//    PyObject* lat = PyObject_GetAttrString(first, "lat");
-//    PyObject* lon = PyObject_GetAttrString(first, "lng");
-//    GeoCoord pivot { PyFloat_AsDouble(lat), PyFloat_AsDouble(lon) };
-//
-//    Py_DECREF(lat);
-//    Py_DECREF(lon);
-//}
 
 
 static PyObject* sort_by_distance(PyObject* self, PyObject* args) {     // (list[GeoCoord], GeoCoord) -> list[GeoCoord]
@@ -312,10 +287,11 @@ static PyObject* only_in_map(PyObject* self, PyObject* args) {    // (list[GeoCo
 
 
 static PyMethodDef SpamMethods[] = {
+    { "distance2_between", distance2_between, METH_VARARGS, "distance between two GeoCoord objects. 조금 더 느리다.." },
     { "furthest_marker", furthest_marker, METH_VARARGS, "find furthest marker. 얘는 빠르다." },
-    { "zoom_path", zoom_path, METH_VARARGS, "zoom path. 근데 더 느리다.." },
+    { "zoom_path", zoom_path, METH_VARARGS, "zoom path. 더 느리다.." },
     { "sort_by_distance", sort_by_distance, METH_VARARGS, "sort list. 얘도 더 느리다.." },
-    { "only_in_map", only_in_map, METH_VARARGS, "filter markers. 얘는 별 차이가 없다..." },
+    { "only_in_map", only_in_map, METH_VARARGS, "filter markers. 얘는 별 차이가 없거나 조금 더 느리다..." },
     { NULL, NULL, 0, NULL } // 배열의 끝을 나타냅니다.
 };
 
